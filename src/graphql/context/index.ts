@@ -1,11 +1,12 @@
-import type { ExpressContextFunctionArgument } from '@as-integrations/express5'
+import type { ApolloFastifyContextFunction } from '@as-integrations/fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { type JwtPayload, verifyJwt } from '@/utils/jwt'
 
 export type GraphQLContext = {
   userId: string | undefined
   token: string | undefined
-  req: ExpressContextFunctionArgument['req']
-  res: ExpressContextFunctionArgument['res']
+  req: FastifyRequest
+  res: FastifyReply
 }
 
 function getUserIdFromToken(token: string | undefined): string | undefined {
@@ -18,13 +19,15 @@ function getUserIdFromToken(token: string | undefined): string | undefined {
   }
 }
 
-export const buildContext = async ({
-  req,
-  res,
-}: ExpressContextFunctionArgument): Promise<GraphQLContext> => {
-  const authHeader = req.headers.authorization || ''
+export const buildContext: ApolloFastifyContextFunction<
+  GraphQLContext
+> = async (req, res) => {
+  const rawAuthorization = req.headers.authorization
+  const authHeader = Array.isArray(rawAuthorization)
+    ? (rawAuthorization[0] ?? '')
+    : (rawAuthorization ?? '')
   const token = authHeader.replace('Bearer ', '')
   const userId = getUserIdFromToken(token)
 
-  return { userId, token, req, res } as GraphQLContext
+  return { userId, token, req, res }
 }

@@ -1,5 +1,5 @@
+import { prismaClient } from '@/prisma/prisma'
 import { hashPassword } from '@/utils/hash'
-import { prismaClient } from '../../prisma/prisma'
 
 export class UserService {
   async createUser(name: string, email: string, password: string) {

@@ -3,6 +3,14 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+input CreateTransactionInput {
+  amount: Float!
+  category: String!
+  date: DateTimeISO!
+  description: String!
+  type: String!
+}
+
 input CreateUserInput {
   email: String!
   name: String!
@@ -26,12 +34,16 @@ type LoginOutput {
 }
 
 type Mutation {
+  createTransaction(data: CreateTransactionInput!): TransactionModel!
+  deleteTransaction(id: String!): Boolean!
   login(data: LoginInput!): LoginOutput!
   register(data: RegisterInput!): RegisterOutput!
+  updateTransaction(data: UpdateTransactionInput!): TransactionModel!
 }
 
 type Query {
   createUser(data: CreateUserInput!): String!
+  getTransactions: [TransactionModel!]!
   getUser(id: String!): UserModel!
 }
 
@@ -45,6 +57,28 @@ type RegisterOutput {
   refreshToken: String!
   token: String!
   user: UserModel!
+}
+
+type TransactionModel {
+  amount: Float!
+  category: String!
+  createdAt: DateTimeISO!
+  date: DateTimeISO!
+  description: String!
+  id: ID!
+  type: String!
+  updatedAt: DateTimeISO!
+  user: UserModel
+  userId: String!
+}
+
+input UpdateTransactionInput {
+  amount: Float
+  category: String
+  date: DateTimeISO
+  description: String
+  id: ID!
+  type: String
 }
 
 type UserModel {

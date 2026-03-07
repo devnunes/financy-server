@@ -6,7 +6,8 @@
     "useIgnoreFile": false
   },
   "files": {
-    "ignoreUnknown": false
+    "ignoreUnknown": false,
+    "includes": ["**", "!!./node_modules", "!!./src/prisma/generated"]
   },
   "formatter": {
     "enabled": true,
@@ -17,7 +18,15 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noConsole": {
+          "level": "error",
+          "options": {
+            "allow": ["warn", "error", "info", "assert"]
+          }
+        }
+      }
     }
   },
   "javascript": {

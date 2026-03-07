@@ -1,37 +1,57 @@
 import 'reflect-metadata'
 import { ApolloServer } from '@apollo/server'
-import { expressMiddleware } from '@as-integrations/express5'
-import express from 'express'
+import fastifyApollo from '@as-integrations/fastify'
+import { fastifyCors } from '@fastify/cors'
+import fastify from 'fastify'
+import {
+  hasZodFastifySchemaValidationErrors,
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod'
 import { buildSchema } from 'type-graphql'
-import { buildContext } from './graphql/context'
-import { AuthResolver } from './resolvers/auth.resolver'
-import { UserResolver } from './resolvers/user.resolver'
+import { env } from '@/env'
+import { buildContext, type GraphQLContext } from './graphql/context'
+import { resolvers } from './resolvers'
 
-async function bootstrap() {
-  const app = express()
+const app = fastify()
 
-  const schema = await buildSchema({
-    resolvers: [AuthResolver, UserResolver],
-    validate: false,
-    emitSchemaFile: './schema.graphql',
-  })
+app.setValidatorCompiler(validatorCompiler)
+app.setSerializerCompiler(serializerCompiler)
 
-  const server = new ApolloServer({
-    schema,
-    introspection: true,
-  })
-  await server.start()
-
-  app.use(
-    '/graphql',
-    express.json(),
-    expressMiddleware(server, {
-      context: buildContext,
+app.setErrorHandler((error, _request, reply) => {
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    return reply.status(400).send({
+      message: 'Validation Error',
     })
-  )
-  app.listen(4000, () => {
-    console.log('Server is running on http://localhost:4000/graphql')
-  })
-}
+  }
 
-bootstrap()
+  console.error(error)
+  return reply.status(500).send({
+    message: 'Internal server error',
+  })
+})
+
+const schema = await buildSchema({
+  resolvers,
+  validate: false,
+  emitSchemaFile: './schema.graphql',
+})
+
+const server = new ApolloServer<GraphQLContext>({
+  schema,
+  introspection: true,
+})
+await server.start()
+
+app.register(fastifyCors, {
+  origin: env.WEB_URL || 'http://localhost:5173',
+  methods: ['GET', 'POST', 'DELETE'],
+})
+
+app.register(fastifyApollo(server), {
+  path: '/graphql',
+  context: buildContext,
+})
+app.listen({ port: env.PORT }, () => {
+  console.info(`Server is running on http://localhost:${env.PORT}/graphql`)
+})
