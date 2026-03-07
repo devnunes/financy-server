@@ -1,6 +1,43 @@
-node_modules
+### Universal ###
+# Common files that should be ignored in all projects
+.DS_Store
+# Logs
+logs
+*.log
+# Temporary files
+*.tmp
+*~
+*.bak
+
+# Environment files (containing secrets, API keys, credentials)
+.env
+.env.*
+!.env.example
+!.env.test
+# Prisma generated client
 /src/prisma/generated
+
+# Local development database file
 dev.db
 test.db
-.DS_Store
-.env
+
+### Typescript ###
+# typescript specific files
+
+*.tsbuildinfo
+node_modules/
+dist/
+
+### Pnpm ###
+# pnpm package manager specific files
+
+# PNPM
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.pnpm/
+.pnpm-debug.log
+
+.pnpm-store/
+pnpm-lock.yaml.bak
+.pnpmfile.cjs
+.pnpm-cache/
