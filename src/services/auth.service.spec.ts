@@ -1,20 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { prismaClient } from '@/prisma/prisma'
 import { AuthService } from '@/services/auth.service'
-import { hashPassword } from '@/utils/hash'
+import { createUserFactory } from '@/test/factories/user.factory'
 import { verifyJwt } from '@/utils/jwt'
 
 describe('AuthService.login', () => {
   it('returns signed tokens when credentials are valid', async () => {
     const service = new AuthService()
-    const password = '123456'
-
-    const user = await prismaClient.user.create({
-      data: {
-        name: 'Test User',
-        email: 'test@email.com',
-        password: await hashPassword(password),
-      },
+    const password = 'valid-password'
+    const user = await createUserFactory({
+      password,
     })
 
     const result = await service.login({
@@ -24,7 +18,7 @@ describe('AuthService.login', () => {
 
     expect(result.token).toBeTypeOf('string')
     expect(result.refreshToken).toBeTypeOf('string')
-    expect(result.user.email).toBe('test@email.com')
+    expect(result.user.email).toBe(user.email)
 
     const tokenPayload = verifyJwt(result.token)
     const refreshTokenPayload = verifyJwt(result.refreshToken)
@@ -36,17 +30,10 @@ describe('AuthService.login', () => {
   it('throws when credentials are invalid', async () => {
     const service = new AuthService()
 
-    await prismaClient.user.create({
-      data: {
-        name: 'Test User',
-        email: 'test@email.com',
-        password: await hashPassword('123456'),
-      },
-    })
-
+    const user = await createUserFactory()
     await expect(
       service.login({
-        email: 'test@email.com',
+        email: user.email,
         password: 'wrong-password',
       })
     ).rejects.toThrow('Invalid password')
