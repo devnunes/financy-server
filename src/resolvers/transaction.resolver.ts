@@ -21,7 +21,10 @@ import { UserService } from '@/services/user.service'
 type TransactionResolverDeps = {
   transactionService?: Pick<
     TransactionService,
-    'createTransaction' | 'updateTransaction'
+    | 'createTransaction'
+    | 'getTransactions'
+    | 'updateTransaction'
+    | 'deleteTransaction'
   >
   userService?: Pick<UserService, 'getUserById'>
 }
@@ -31,11 +34,15 @@ type TransactionResolverDeps = {
 export class TransactionResolver {
   private transactionService: Pick<
     TransactionService,
-    'createTransaction' | 'updateTransaction'
+    | 'createTransaction'
+    | 'getTransactions'
+    | 'updateTransaction'
+    | 'deleteTransaction'
   >
   private userService: Pick<UserService, 'getUserById'>
   constructor(deps?: TransactionResolverDeps) {
-    this.transactionService = deps?.transactionService ?? new TransactionService()
+    this.transactionService =
+      deps?.transactionService ?? new TransactionService()
     this.userService = deps?.userService ?? new UserService()
   }
 
@@ -49,6 +56,15 @@ export class TransactionResolver {
     return this.transactionService.createTransaction(data, context.userId)
   }
 
+  @Mutation(() => [TransactionModel])
+  async getTransactions(
+    @Ctx() context: GraphQLContext
+  ): Promise<TransactionModel[]> {
+    if (!context.userId) throw new Error('Unauthorized')
+
+    return this.transactionService.getTransactions(context.userId)
+  }
+
   @Mutation(() => TransactionModel)
   async updateTransaction(
     @Arg('data', () => UpdateTransactionInput) data: UpdateTransactionInput,
@@ -57,6 +73,16 @@ export class TransactionResolver {
     if (!context.userId) throw new Error('Unauthorized')
 
     return this.transactionService.updateTransaction(data, context.userId)
+  }
+
+  @Mutation(() => Boolean)
+  async deleteTransaction(
+    @Arg('id', () => String) id: string,
+    @Ctx() context: GraphQLContext
+  ): Promise<boolean> {
+    if (!context.userId) throw new Error('Unauthorized')
+
+    return this.transactionService.deleteTransaction(id, context.userId)
   }
 
   @FieldResolver(() => UserModel, { nullable: true })

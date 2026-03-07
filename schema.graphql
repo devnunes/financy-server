@@ -35,6 +35,8 @@ type LoginOutput {
 
 type Mutation {
   createTransaction(data: CreateTransactionInput!): TransactionModel!
+  deleteTransaction(id: String!): Boolean!
+  getTransactions: [TransactionModel!]!
   login(data: LoginInput!): LoginOutput!
   register(data: RegisterInput!): RegisterOutput!
   updateTransaction(data: UpdateTransactionInput!): TransactionModel!

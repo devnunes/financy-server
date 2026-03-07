@@ -12,15 +12,25 @@ type createSetup = {
   context: GraphQLContext
 }
 
+type getSetup = {
+  input: { userId: string }
+  context: GraphQLContext
+}
+
 type updateSetup = {
   input: UpdateTransactionInput
   context: GraphQLContext
 }
 
+type deleteSetup = {
+  input: { id: string }
+  context: GraphQLContext
+}
+
 function makeResolverSetup(
-  method: 'create' | 'update',
-  overrides?: Partial<createSetup | updateSetup>
-): createSetup | updateSetup {
+  method: 'create' | 'update' | 'delete' | 'get',
+  overrides?: Partial<createSetup | updateSetup | deleteSetup | getSetup>
+): createSetup | updateSetup | deleteSetup | getSetup {
   const data = {
     input: {
       amount: faker.number.int({ min: 1, max: 1000 }),
@@ -37,9 +47,9 @@ function makeResolverSetup(
   }
   if (method === 'update') {
     Object.assign(data.input, { id: faker.string.uuid() })
-    return data as updateSetup
+    return data
   }
-  return data as createSetup
+  return data
 }
 
 describe('TransactionResolver.createTransaction', () => {
@@ -57,7 +67,9 @@ describe('TransactionResolver.createTransaction', () => {
     const resolver = new TransactionResolver({
       transactionService: {
         createTransaction,
+        getTransactions: vi.fn(),
         updateTransaction: vi.fn(),
+        deleteTransaction: vi.fn(),
       },
     })
 
@@ -88,6 +100,44 @@ describe('TransactionResolver.createTransaction', () => {
   })
 })
 
+describe('TransactionResolver.getTransactions', () => {
+  it('should delegate fetching to TransactionService', async () => {
+    const context = {
+      userId: faker.string.uuid(),
+    } as GraphQLContext
+
+    const transactions = [
+      {
+        id: faker.string.uuid(),
+        amount: faker.number.int({ min: 1, max: 1000 }),
+        description: faker.lorem.sentence(),
+        type: faker.helpers.arrayElement(['income', 'expense']),
+        category: faker.lorem.word(),
+        date: faker.date.recent(),
+        userId: context.userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+
+    const getTransactions = vi.fn().mockResolvedValue(transactions)
+
+    const resolver = new TransactionResolver({
+      transactionService: {
+        createTransaction: vi.fn(),
+        getTransactions,
+        updateTransaction: vi.fn(),
+        deleteTransaction: vi.fn(),
+      },
+    })
+
+    const result = await resolver.getTransactions(context)
+
+    expect(getTransactions).toHaveBeenCalledWith(context.userId)
+    expect(result).toEqual(transactions)
+  })
+})
+
 describe('TransactionResolver.updateTransaction', () => {
   it('should delegate update to TransactionService', async () => {
     const { input, context } = makeResolverSetup('update') as updateSetup
@@ -102,7 +152,9 @@ describe('TransactionResolver.updateTransaction', () => {
     const resolver = new TransactionResolver({
       transactionService: {
         createTransaction: vi.fn(),
+        getTransactions: vi.fn(),
         updateTransaction,
+        deleteTransaction: vi.fn(),
       },
     })
 
@@ -128,6 +180,41 @@ describe('TransactionResolver.updateTransaction', () => {
     }) as updateSetup
 
     await expect(resolver.updateTransaction(input, context)).rejects.toThrow(
+      'Unauthorized'
+    )
+  })
+})
+
+describe('TransactionResolver.deleteTransaction', () => {
+  it('should delegate deletion to TransactionService', async () => {
+    const { input, context } = makeResolverSetup('update') as deleteSetup
+
+    const deleteTransaction = vi.fn().mockResolvedValue(true)
+
+    const resolver = new TransactionResolver({
+      transactionService: {
+        createTransaction: vi.fn(),
+        getTransactions: vi.fn(),
+        updateTransaction: vi.fn(),
+        deleteTransaction,
+      },
+    })
+
+    const result = await resolver.deleteTransaction(input.id, context)
+
+    expect(deleteTransaction).toHaveBeenCalledWith(input.id, context.userId)
+    expect(result).toBe(true)
+  })
+
+  it('should throw Unauthorized when context has no userId', async () => {
+    const resolver = new TransactionResolver()
+    const { input, context } = makeResolverSetup('update', {
+      context: {
+        userId: undefined,
+      } as GraphQLContext,
+    }) as deleteSetup
+
+    await expect(resolver.deleteTransaction(input.id, context)).rejects.toThrow(
       'Unauthorized'
     )
   })
