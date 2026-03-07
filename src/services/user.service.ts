@@ -1,4 +1,4 @@
-import { prismaClient } from '@/prisma-client'
+import { prismaClient } from '@/prisma/prisma'
 import { hashPassword } from '@/utils/hash'
 
 export class UserService {

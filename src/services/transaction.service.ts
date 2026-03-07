@@ -1,5 +1,5 @@
 import type { CreateTransactionInput } from '@/dtos/input/transaction.input'
-import { prismaClient } from '@/prisma-client'
+import { prismaClient } from '@/prisma/prisma'
 
 export class TransactionService {
   async createTransaction(data: CreateTransactionInput, userId: string) {
