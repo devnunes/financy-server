@@ -1,5 +1,5 @@
-import 'dotenv/config'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { env } from '@/env'
 import { PrismaClient } from '@/prisma/generated/client'
 
 type PrismaGlobal = {
@@ -9,7 +9,7 @@ type PrismaGlobal = {
 const globalForPrisma = globalThis as PrismaGlobal
 
 function getDatabaseUrl() {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = env.DATABASE_URL
   if (!databaseUrl) {
     throw new Error('DATABASE_URL is not set')
   }
