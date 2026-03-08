@@ -35,6 +35,14 @@ describe('UserService.getUserById', () => {
     expect(result.name).toBe(user.name)
     expect(result.email).toBe(user.email)
   })
+
+  it('should throw when user does not exist', async () => {
+    const service = new UserService()
+
+    await expect(service.getUserById(faker.string.uuid())).rejects.toThrow(
+      'User not found'
+    )
+  })
 })
 
 describe('UserService.updateUser', () => {
@@ -51,5 +59,44 @@ describe('UserService.updateUser', () => {
     expect(result).toBe(true)
     const updatedUser = await service.getUserById(user.id)
     expect(updatedUser.name).toBe('Updated Name')
+  })
+
+  it('should throw when userId is missing', async () => {
+    const service = new UserService()
+    const user = await createUserFactory()
+
+    await expect(
+      service.updateUser({ id: user.id, name: 'Any Name' }, '')
+    ).rejects.toThrow('Unauthorized')
+  })
+
+  it('should throw when input id differs from userId', async () => {
+    const service = new UserService()
+    const user = await createUserFactory()
+
+    await expect(
+      service.updateUser({ id: faker.string.uuid(), name: 'Any Name' }, user.id)
+    ).rejects.toThrow('Unauthorized')
+  })
+
+  it('should throw when user is not found', async () => {
+    const service = new UserService()
+    const missingUserId = faker.string.uuid()
+
+    await expect(
+      service.updateUser({ id: missingUserId, name: 'Any Name' }, missingUserId)
+    ).rejects.toThrow('User not found')
+  })
+
+  it('should keep existing email and password when not provided', async () => {
+    const user = await createUserFactory()
+    const service = new UserService()
+
+    await service.updateUser({ id: user.id, name: 'Name Only' }, user.id)
+
+    const updatedUser = await service.getUserById(user.id)
+    expect(updatedUser.name).toBe('Name Only')
+    expect(updatedUser.email).toBe(user.email)
+    expect(updatedUser.password).toBe(user.password)
   })
 })

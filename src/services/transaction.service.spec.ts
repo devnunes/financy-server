@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
 import { TransactionService } from '@/services/transaction.service'
 import { createTransactionFactory } from '@/test/factories/transaction.factory'
@@ -26,23 +27,6 @@ describe('TransactionService.createTransaction', () => {
     expect(transaction.date).toBeInstanceOf(Date)
     expect(transaction.userId).toBe(user.id)
   })
-
-  // it('throws when credentials are invalid', async () => {
-  //   const service = new TransactionService()
-
-  //   await expect(
-  //     service.createTransaction(
-  //       {
-  //         amount: 100,
-  //         description: 'Test transaction',
-  //         type: 'income',
-  //         category: 'salary',
-  //         date: new Date(),
-  //       },
-  //       'invalid-user-id'
-  //     )
-  //   ).rejects.toThrow('User not found')
-  // })
 })
 
 describe('TransactionService.getTransactions', () => {
@@ -89,6 +73,44 @@ describe('TransactionService.updateTransaction', () => {
     expect(updatedTransaction.date).toBeInstanceOf(Date)
     expect(updatedTransaction.userId).toBe(user.id)
   })
+
+  it('should throw when transaction does not exist', async () => {
+    const user = await createUserFactory()
+    const service = new TransactionService()
+
+    await expect(
+      service.updateTransaction(
+        {
+          id: faker.string.uuid(),
+          amount: 200,
+          description: 'Updated transaction',
+          type: 'expense',
+          date: new Date(),
+        },
+        user.id
+      )
+    ).rejects.toThrow('Transaction not found')
+  })
+
+  it('should throw when transaction belongs to another user', async () => {
+    const owner = await createUserFactory()
+    const anotherUser = await createUserFactory()
+    const transaction = await createTransactionFactory(owner.id)
+    const service = new TransactionService()
+
+    await expect(
+      service.updateTransaction(
+        {
+          id: transaction.id,
+          amount: 200,
+          description: 'Updated transaction',
+          type: 'expense',
+          date: new Date(),
+        },
+        anotherUser.id
+      )
+    ).rejects.toThrow('Unauthorized')
+  })
 })
 
 describe('TransactionService.deleteTransaction', () => {
@@ -105,5 +127,25 @@ describe('TransactionService.deleteTransaction', () => {
     expect(deletedTransaction).not.toEqual(
       expect.arrayContaining([expect.objectContaining(transaction)])
     )
+  })
+
+  it('should throw when transaction does not exist', async () => {
+    const user = await createUserFactory()
+    const service = new TransactionService()
+
+    await expect(
+      service.deleteTransaction(faker.string.uuid(), user.id)
+    ).rejects.toThrow('Transaction not found')
+  })
+
+  it('should throw when transaction belongs to another user', async () => {
+    const owner = await createUserFactory()
+    const anotherUser = await createUserFactory()
+    const transaction = await createTransactionFactory(owner.id)
+    const service = new TransactionService()
+
+    await expect(
+      service.deleteTransaction(transaction.id, anotherUser.id)
+    ).rejects.toThrow('Unauthorized')
   })
 })
