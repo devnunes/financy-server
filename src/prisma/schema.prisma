@@ -15,6 +15,7 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   transactions Transaction[]
+  categories   Category[]
 }
 
 model Transaction {
@@ -22,11 +23,27 @@ model Transaction {
   amount      Float
   description String
   type        String
-  category    String
   date        DateTime
   userId      String
+  categoryId  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id])
+}
+
+model Category {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  icon        String
+  color       String
+  userId      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 }

@@ -14,7 +14,6 @@ describe('TransactionService.createTransaction', () => {
         amount: 100,
         description: 'Test transaction',
         type: 'income',
-        category: 'salary',
         date: new Date(),
       },
       user.id
@@ -24,7 +23,6 @@ describe('TransactionService.createTransaction', () => {
     expect(transaction.amount).toBe(100)
     expect(transaction.description).toBe('Test transaction')
     expect(transaction.type).toBe('income')
-    expect(transaction.category).toBe('salary')
     expect(transaction.date).toBeInstanceOf(Date)
     expect(transaction.userId).toBe(user.id)
   })
@@ -79,7 +77,6 @@ describe('TransactionService.updateTransaction', () => {
         amount: 200,
         description: 'Updated transaction',
         type: 'expense',
-        category: 'food',
         date: new Date(),
       },
       user.id
@@ -89,7 +86,6 @@ describe('TransactionService.updateTransaction', () => {
     expect(updatedTransaction.amount).toBe(200)
     expect(updatedTransaction.description).toBe('Updated transaction')
     expect(updatedTransaction.type).toBe('expense')
-    expect(updatedTransaction.category).toBe('food')
     expect(updatedTransaction.date).toBeInstanceOf(Date)
     expect(updatedTransaction.userId).toBe(user.id)
   })

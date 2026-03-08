@@ -7,12 +7,6 @@ export async function createTransactionFactory(userId: string) {
       amount: faker.number.int({ min: 1, max: 1000 }),
       description: faker.lorem.sentence(),
       type: faker.helpers.arrayElement(['income', 'expense']),
-      category: faker.helpers.arrayElement([
-        'salary',
-        'food',
-        'entertainment',
-        'transport',
-      ]),
       date: faker.date.recent(),
       userId,
     },

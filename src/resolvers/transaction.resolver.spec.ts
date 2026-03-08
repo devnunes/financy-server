@@ -82,7 +82,6 @@ describe('TransactionResolver.createTransaction', () => {
       amount: input.amount,
       description: input.description,
       type: input.type,
-      category: input.category,
     })
   })
 
@@ -167,7 +166,6 @@ describe('TransactionResolver.updateTransaction', () => {
       amount: input.amount,
       description: input.description,
       type: input.type,
-      category: input.category,
     })
   })
 

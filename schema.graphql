@@ -3,9 +3,22 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+type CategoryModel {
+  color: String!
+  createdAt: DateTimeISO!
+  description: String!
+  icon: String!
+  id: ID!
+  title: String!
+  transactions: [TransactionModel!]
+  updatedAt: DateTimeISO!
+  user: UserModel
+  userId: String!
+}
+
 input CreateTransactionInput {
   amount: Float!
-  category: String!
+  categoryId: String
   date: DateTimeISO!
   description: String!
   type: String!
@@ -61,7 +74,8 @@ type RegisterOutput {
 
 type TransactionModel {
   amount: Float!
-  category: String!
+  category: CategoryModel
+  categoryId: String!
   createdAt: DateTimeISO!
   date: DateTimeISO!
   description: String!
@@ -74,7 +88,7 @@ type TransactionModel {
 
 input UpdateTransactionInput {
   amount: Float
-  category: String
+  categoryId: String
   date: DateTimeISO
   description: String
   id: ID!
