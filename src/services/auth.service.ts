@@ -1,7 +1,7 @@
 import type { LoginInput, RegisterInput } from '@/dtos/input/auth.input'
 import type { User } from '@/prisma/generated/client'
 import { prismaClient } from '@/prisma/prisma'
-import { comparePassword } from '@/utils/hash'
+import { comparePassword, hashPassword } from '@/utils/hash'
 import { signJwt } from '@/utils/jwt'
 
 export class AuthService {
@@ -18,8 +18,15 @@ export class AuthService {
       },
     })
     if (user) throw new Error('User already exists')
+    const createdUser = await prismaClient.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: await hashPassword(data.password),
+      },
+    })
 
-    return this.generateTokens(user)
+    return this.generateTokens(createdUser)
   }
 
   async login(data: LoginInput) {

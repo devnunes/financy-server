@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { describe, expect, it, vi } from 'vitest'
 import type { LoginInput, RegisterInput } from '@/dtos/input/auth.input'
+import { AuthService } from '@/services/auth.service'
 import { AuthResolver } from './auth.resolver'
 
 type RegisterSetup = {
@@ -83,5 +84,53 @@ describe('AuthResolver', () => {
         password: input.password,
       },
     })
+  })
+
+  it('should use AuthService.register when no dependency is injected', async () => {
+    const { input } = makeResolverSetup('register') as RegisterSetup
+    const registerSpy = vi.spyOn(AuthService.prototype, 'register')
+    registerSpy.mockResolvedValue({
+      token: faker.internet.jwt(),
+      refreshToken: faker.internet.jwt(),
+      user: {
+        id: faker.string.uuid(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: input.name,
+        email: input.email,
+        password: input.password,
+      },
+    })
+
+    const resolver = new AuthResolver()
+
+    const result = await resolver.register(input)
+
+    expect(registerSpy).toHaveBeenCalledWith(input)
+    expect(result.user.email).toBe(input.email)
+  })
+
+  it('should use AuthService.login when no dependency is injected', async () => {
+    const { input } = makeResolverSetup('login') as LoginSetup
+    const loginSpy = vi.spyOn(AuthService.prototype, 'login')
+    loginSpy.mockResolvedValue({
+      token: faker.internet.jwt(),
+      refreshToken: faker.internet.jwt(),
+      user: {
+        id: faker.string.uuid(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        name: faker.person.fullName(),
+        email: input.email,
+        password: input.password,
+      },
+    })
+
+    const resolver = new AuthResolver()
+
+    const result = await resolver.login(input)
+
+    expect(loginSpy).toHaveBeenCalledWith(input)
+    expect(result.user.email).toBe(input.email)
   })
 })

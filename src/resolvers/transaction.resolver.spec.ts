@@ -139,6 +139,17 @@ describe('TransactionResolver.getTransactions', () => {
     expect(getTransactions).toHaveBeenCalledWith(context.userId)
     expect(result).toEqual(transactions)
   })
+
+  it('should throw Unauthorized when context has no userId', async () => {
+    const resolver = new TransactionResolver()
+    const context = {
+      userId: undefined,
+    } as GraphQLContext
+
+    await expect(resolver.getTransactions(context)).rejects.toThrow(
+      'Unauthorized'
+    )
+  })
 })
 
 describe('TransactionResolver.updateTransaction', () => {
@@ -219,5 +230,34 @@ describe('TransactionResolver.deleteTransaction', () => {
     await expect(resolver.deleteTransaction(input.id, context)).rejects.toThrow(
       'Unauthorized'
     )
+  })
+})
+
+describe('TransactionResolver.user', () => {
+  it('should resolve user from UserService', async () => {
+    const userId = faker.string.uuid()
+    const getUserById = vi.fn().mockResolvedValue({
+      id: userId,
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    })
+
+    const resolver = new TransactionResolver({
+      userService: {
+        getUserById,
+      },
+      transactionService: {
+        createTransaction: vi.fn(),
+        getTransactions: vi.fn(),
+        updateTransaction: vi.fn(),
+        deleteTransaction: vi.fn(),
+      },
+    })
+
+    const result = await resolver.user({ userId } as never)
+
+    expect(getUserById).toHaveBeenCalledWith(userId)
+    expect(result.id).toBe(userId)
   })
 })

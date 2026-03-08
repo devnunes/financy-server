@@ -1,9 +1,11 @@
 ### Universal ###
 # Common files that should be ignored in all projects
 .DS_Store
+coverage/
 # Logs
 logs
 *.log
+
 # Temporary files
 *.tmp
 *~

@@ -15,7 +15,7 @@ type updateSetup = {
 }
 
 function makeResolverSetup(
-  method: 'create' | 'update' | 'delete' | 'get',
+  method: 'update' | 'get',
   overrides?: Partial<createSetup | updateSetup>
 ): createSetup | updateSetup {
   const data = {
@@ -36,28 +36,6 @@ function makeResolverSetup(
   }
   return data
 }
-
-describe('UserResolver.createUser', () => {
-  it('should delegate creation to UserService', async () => {
-    const { input } = makeResolverSetup('create') as createSetup
-    const createUser = vi.fn().mockResolvedValue({
-      ...input,
-    })
-
-    const resolver = new UserResolver({
-      userService: {
-        createUser,
-        getUserById: vi.fn(),
-        updateUser: vi.fn(),
-      },
-    })
-
-    const result = await resolver.createUser(input)
-
-    expect(createUser).toHaveBeenCalledWith(input)
-    expect(result).toBe(true)
-  })
-})
 
 describe('UserResolver.updateUser', () => {
   it('should delegate update to UserService', async () => {
@@ -99,5 +77,30 @@ describe('UserResolver.updateUser', () => {
     await expect(resolver.updateUser(input, context)).rejects.toThrow(
       'Unauthorized'
     )
+  })
+})
+
+describe('UserResolver.getUser', () => {
+  it('should delegate getUser to UserService', async () => {
+    const userId = faker.string.uuid()
+    const getUserById = vi.fn().mockResolvedValue({
+      id: userId,
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    })
+
+    const resolver = new UserResolver({
+      userService: {
+        createUser: vi.fn(),
+        getUserById,
+        updateUser: vi.fn(),
+      },
+    })
+
+    const result = await resolver.getUser(userId)
+
+    expect(getUserById).toHaveBeenCalledWith(userId)
+    expect(result.id).toBe(userId)
   })
 })

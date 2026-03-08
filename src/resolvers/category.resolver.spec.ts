@@ -134,6 +134,17 @@ describe('CategoryResolver.getCategories', () => {
     expect(getCategories).toHaveBeenCalledWith(context.userId)
     expect(result).toEqual(categorys)
   })
+
+  it('should throw Unauthorized when context has no userId', async () => {
+    const resolver = new CategoryResolver()
+    const context = {
+      userId: undefined,
+    } as GraphQLContext
+
+    await expect(resolver.getCategories(context)).rejects.toThrow(
+      'Unauthorized'
+    )
+  })
 })
 
 describe('CategoryResolver.updateCategory', () => {
@@ -215,5 +226,34 @@ describe('CategoryResolver.deleteCategory', () => {
     await expect(resolver.deleteCategory(input.id, context)).rejects.toThrow(
       'Unauthorized'
     )
+  })
+})
+
+describe('CategoryResolver.user', () => {
+  it('should resolve user from UserService', async () => {
+    const userId = faker.string.uuid()
+    const getUserById = vi.fn().mockResolvedValue({
+      id: userId,
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    })
+
+    const resolver = new CategoryResolver({
+      userService: {
+        getUserById,
+      },
+      categoryService: {
+        createCategory: vi.fn(),
+        getCategories: vi.fn(),
+        updateCategory: vi.fn(),
+        deleteCategory: vi.fn(),
+      },
+    })
+
+    const result = await resolver.user({ userId } as never)
+
+    expect(getUserById).toHaveBeenCalledWith(userId)
+    expect(result.id).toBe(userId)
   })
 })
