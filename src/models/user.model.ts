@@ -11,9 +11,6 @@ export class UserModel {
   @Field(() => String)
   email!: string
 
-  @Field(() => String)
-  password!: string
-
   @Field(() => GraphQLISODateTime)
   createdAt!: Date
 
