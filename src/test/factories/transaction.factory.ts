@@ -1,6 +1,15 @@
 import { faker } from '@faker-js/faker'
 import { prismaClient } from '@/prisma/prisma'
 
+type CreateManyTransactionFactoryInput = {
+  amount: number
+  description: string
+  type: string
+  date: Date
+  userId: string
+  categoryId?: string | null
+}
+
 export async function createTransactionFactory(userId: string) {
   return prismaClient.transaction.create({
     data: {
@@ -11,4 +20,10 @@ export async function createTransactionFactory(userId: string) {
       userId,
     },
   })
+}
+
+export async function createManyTransactionsFactory(
+  data: CreateManyTransactionFactoryInput[]
+) {
+  return prismaClient.transaction.createMany({ data })
 }

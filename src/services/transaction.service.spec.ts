@@ -1,7 +1,10 @@
 import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
 import { TransactionService } from '@/services/transaction.service'
-import { createTransactionFactory } from '@/test/factories/transaction.factory'
+import {
+  createManyTransactionsFactory,
+  createTransactionFactory,
+} from '@/test/factories/transaction.factory'
 import { createUserFactory } from '@/test/factories/user.factory'
 
 describe('TransactionService.createTransaction', () => {
@@ -45,6 +48,67 @@ describe('TransactionService.getTransactions', () => {
         expect.objectContaining(transaction2),
       ])
     )
+  })
+})
+
+describe('TransactionService.getTransactionSummary', () => {
+  it('should return balance, income and expense for the user', async () => {
+    const user = await createUserFactory()
+    const anotherUser = await createUserFactory()
+
+    await createManyTransactionsFactory([
+      {
+        amount: 200,
+        description: 'Salary',
+        type: 'income',
+        date: new Date(),
+        userId: user.id,
+      },
+      {
+        amount: 50,
+        description: 'Bonus',
+        type: 'income',
+        date: new Date(),
+        userId: user.id,
+      },
+      {
+        amount: 80,
+        description: 'Groceries',
+        type: 'expense',
+        date: new Date(),
+        userId: user.id,
+      },
+      {
+        amount: 500,
+        description: 'Another user income',
+        type: 'income',
+        date: new Date(),
+        userId: anotherUser.id,
+      },
+    ])
+
+    const service = new TransactionService()
+
+    const summary = await service.getTransactionSummary(user.id)
+
+    expect(summary).toEqual({
+      balance: 170,
+      income: 250,
+      expense: 80,
+    })
+  })
+
+  it('should return zeroed values when user has no transactions', async () => {
+    const user = await createUserFactory()
+    const service = new TransactionService()
+
+    const summary = await service.getTransactionSummary(user.id)
+
+    expect(summary).toEqual({
+      balance: 0,
+      income: 0,
+      expense: 0,
+    })
   })
 })
 

@@ -23,6 +23,29 @@ export class TransactionService {
     return transactions
   }
 
+  async getTransactionSummary(userId: string) {
+    const groupedTransactions = await prismaClient.transaction.groupBy({
+      by: ['type'],
+      where: { userId },
+      _sum: {
+        amount: true,
+      },
+    })
+
+    const income =
+      groupedTransactions.find((transaction) => transaction.type === 'income')
+        ?._sum.amount ?? 0
+    const expense =
+      groupedTransactions.find((transaction) => transaction.type === 'expense')
+        ?._sum.amount ?? 0
+
+    return {
+      balance: income - expense,
+      income,
+      expense,
+    }
+  }
+
   async updateTransaction(data: UpdateTransactionInput, userId: string) {
     const transaction = await prismaClient.transaction.findUnique({
       where: { id: data.id },

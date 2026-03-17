@@ -16,6 +16,13 @@ type CategoryModel {
   userId: String!
 }
 
+input CreateCategoryInput {
+  color: String!
+  description: String
+  icon: String!
+  title: String!
+}
+
 input CreateTransactionInput {
   amount: Float!
   categoryId: String
@@ -30,16 +37,21 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 scalar DateTimeISO
 
 type Mutation {
+  createCategory(data: CreateCategoryInput!): CategoryModel!
   createTransaction(data: CreateTransactionInput!): TransactionModel!
+  deleteCategory(id: String!): Boolean!
   deleteTransaction(id: String!): Boolean!
   signIn(data: SignInInput!): SignInOutput!
   signUp(data: SignUpInput!): SignUpOutput!
   signout: Boolean!
+  updateCategory(data: UpdateCategoryInput!): CategoryModel!
   updateTransaction(data: UpdateTransactionInput!): TransactionModel!
   updateUser(data: UpdateUserInput!): Boolean!
 }
 
 type Query {
+  getCategories: [CategoryModel!]!
+  getTransactionSummary: TransactionSummaryModel!
   getTransactions: [TransactionModel!]!
   getUser(id: String!): UserModel!
   me: UserModel!
@@ -80,6 +92,21 @@ type TransactionModel {
   updatedAt: DateTimeISO!
   user: UserModel
   userId: String!
+}
+
+type TransactionSummaryModel {
+  balance: Float!
+  expense: Float!
+  income: Float!
+}
+
+input UpdateCategoryInput {
+  color: String
+  description: String
+  icon: String
+  id: ID!
+  title: String
+  userId: String
 }
 
 input UpdateTransactionInput {

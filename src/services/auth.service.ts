@@ -8,8 +8,8 @@ import { signJwt } from '@/utils/jwt'
 
 export class AuthService {
   generateTokens(user: User) {
-    const token = signJwt({ id: user.id, email: user.email }, '15m')
-    const refreshToken = signJwt({ id: user.id, email: user.email }, '7d')
+    const token = signJwt({ id: user.id, email: user.email }, '7d')
+    const refreshToken = signJwt({ id: user.id, email: user.email }, '14d')
     return { token, refreshToken, user }
   }
 

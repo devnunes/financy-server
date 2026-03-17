@@ -15,6 +15,7 @@ import {
 import type { GraphQLContext } from '@/graphql/context'
 import { authMiddleware } from '@/middlewares/auth.middleware'
 import { TransactionModel } from '@/models/transaction.model'
+import { TransactionSummaryModel } from '@/models/transaction-summary.model'
 import { UserModel } from '@/models/user.model'
 import { TransactionService } from '@/services/transaction.service'
 import { UserService } from '@/services/user.service'
@@ -24,6 +25,7 @@ type TransactionResolverDeps = {
     TransactionService,
     | 'createTransaction'
     | 'getTransactions'
+    | 'getTransactionSummary'
     | 'updateTransaction'
     | 'deleteTransaction'
   >
@@ -37,6 +39,7 @@ export class TransactionResolver {
     TransactionService,
     | 'createTransaction'
     | 'getTransactions'
+    | 'getTransactionSummary'
     | 'updateTransaction'
     | 'deleteTransaction'
   >
@@ -64,6 +67,15 @@ export class TransactionResolver {
     if (!context.userId) throw new Error('Unauthorized')
 
     return this.transactionService.getTransactions(context.userId)
+  }
+
+  @Query(() => TransactionSummaryModel)
+  async getTransactionSummary(
+    @Ctx() context: GraphQLContext
+  ): Promise<TransactionSummaryModel> {
+    if (!context.userId) throw new Error('Unauthorized')
+
+    return this.transactionService.getTransactionSummary(context.userId)
   }
 
   @Mutation(() => TransactionModel)

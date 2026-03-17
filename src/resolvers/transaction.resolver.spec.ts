@@ -69,6 +69,7 @@ describe('TransactionResolver.createTransaction', () => {
       transactionService: {
         createTransaction,
         getTransactions: vi.fn(),
+        getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
       },
@@ -129,6 +130,7 @@ describe('TransactionResolver.getTransactions', () => {
       transactionService: {
         createTransaction: vi.fn(),
         getTransactions,
+        getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
       },
@@ -152,6 +154,50 @@ describe('TransactionResolver.getTransactions', () => {
   })
 })
 
+describe('TransactionResolver.getTransactionSummary', () => {
+  it('should delegate summary fetching to TransactionService', async () => {
+    const context = {
+      userId: faker.string.uuid(),
+    } as GraphQLContext
+
+    const getTransactionSummary = vi.fn().mockResolvedValue({
+      balance: 170,
+      income: 250,
+      expense: 80,
+    })
+
+    const resolver = new TransactionResolver({
+      transactionService: {
+        createTransaction: vi.fn(),
+        getTransactions: vi.fn(),
+        getTransactionSummary,
+        updateTransaction: vi.fn(),
+        deleteTransaction: vi.fn(),
+      },
+    })
+
+    const result = await resolver.getTransactionSummary(context)
+
+    expect(getTransactionSummary).toHaveBeenCalledWith(context.userId)
+    expect(result).toEqual({
+      balance: 170,
+      income: 250,
+      expense: 80,
+    })
+  })
+
+  it('should throw Unauthorized when context has no userId', async () => {
+    const resolver = new TransactionResolver()
+    const context = {
+      userId: undefined,
+    } as GraphQLContext
+
+    await expect(resolver.getTransactionSummary(context)).rejects.toThrow(
+      'Unauthorized'
+    )
+  })
+})
+
 describe('TransactionResolver.updateTransaction', () => {
   it('should delegate update to TransactionService', async () => {
     const { input, context } = makeResolverSetup('update') as updateSetup
@@ -167,6 +213,7 @@ describe('TransactionResolver.updateTransaction', () => {
       transactionService: {
         createTransaction: vi.fn(),
         getTransactions: vi.fn(),
+        getTransactionSummary: vi.fn(),
         updateTransaction,
         deleteTransaction: vi.fn(),
       },
@@ -208,6 +255,7 @@ describe('TransactionResolver.deleteTransaction', () => {
       transactionService: {
         createTransaction: vi.fn(),
         getTransactions: vi.fn(),
+        getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction,
       },
@@ -250,6 +298,7 @@ describe('TransactionResolver.user', () => {
       transactionService: {
         createTransaction: vi.fn(),
         getTransactions: vi.fn(),
+        getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
       },
