@@ -12,6 +12,7 @@ import { buildSchema } from 'type-graphql'
 import { env } from '@/env'
 import { buildContext, type GraphQLContext } from './graphql/context'
 import { resolvers } from './resolvers'
+import fastifyCookie from '@fastify/cookie'
 
 const app = fastify()
 
@@ -46,8 +47,13 @@ await server.start()
 app.register(fastifyCors, {
   origin: env.WEB_URL || 'http://localhost:5173',
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
   methods: ['GET', 'POST', 'DELETE'],
 })
+
+await app.register(fastifyCookie, {
+  secret: env.COOKIE_SECRET, 
+});
 
 app.register(fastifyApollo(server), {
   path: '/graphql',

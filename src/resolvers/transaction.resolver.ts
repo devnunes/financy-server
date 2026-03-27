@@ -14,9 +14,11 @@ import {
 } from '@/dtos/input/transaction.input'
 import type { GraphQLContext } from '@/graphql/context'
 import { authMiddleware } from '@/middlewares/auth.middleware'
+import { CategoryModel } from '@/models/category.model'
 import { TransactionModel } from '@/models/transaction.model'
 import { TransactionSummaryModel } from '@/models/transaction-summary.model'
 import { UserModel } from '@/models/user.model'
+import { CategoryService } from '@/services/category.service'
 import { TransactionService } from '@/services/transaction.service'
 import { UserService } from '@/services/user.service'
 
@@ -30,10 +32,11 @@ type TransactionResolverDeps = {
     | 'deleteTransaction'
   >
   userService?: Pick<UserService, 'getUserById'>
+  categoryService?: Pick<CategoryService, 'getCategoryById'>
 }
 
 @Resolver(() => TransactionModel)
-@UseMiddleware(authMiddleware)
+// @UseMiddleware(authMiddleware)
 export class TransactionResolver {
   private transactionService: Pick<
     TransactionService,
@@ -44,10 +47,13 @@ export class TransactionResolver {
     | 'deleteTransaction'
   >
   private userService: Pick<UserService, 'getUserById'>
+  private categoryService: Pick<CategoryService, 'getCategoryById'>
+
   constructor(deps?: TransactionResolverDeps) {
     this.transactionService =
       deps?.transactionService ?? new TransactionService()
     this.userService = deps?.userService ?? new UserService()
+    this.categoryService = deps?.categoryService ?? new CategoryService()
   }
 
   @Mutation(() => TransactionModel)
@@ -101,5 +107,12 @@ export class TransactionResolver {
   @FieldResolver(() => UserModel, { nullable: true })
   async user(@Root() transaction: TransactionModel): Promise<UserModel | null> {
     return this.userService.getUserById(transaction.userId)
+  }
+
+  @FieldResolver(() => CategoryModel, { nullable: true })
+  async category(
+    @Root() transaction: TransactionModel
+  ): Promise<CategoryModel | null> {
+    return this.categoryService.getCategoryById(transaction.categoryId)
   }
 }

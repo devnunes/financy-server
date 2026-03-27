@@ -28,7 +28,7 @@ type CategoryResolverDeps = {
 }
 
 @Resolver(() => CategoryModel)
-@UseMiddleware(authMiddleware)
+// @UseMiddleware(authMiddleware)
 export class CategoryResolver {
   private categoryService: Pick<
     CategoryService,

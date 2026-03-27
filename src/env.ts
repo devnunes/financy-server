@@ -5,6 +5,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('production'),
   DATABASE_URL: z.string().startsWith('file:'),
   JWT_SECRET: z.string().min(1),
+  COOKIE_SECRET: z.string().min(1),
   WEB_URL: z.url().optional(),
 })
 

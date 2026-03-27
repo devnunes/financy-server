@@ -26,6 +26,13 @@ export class CategoryService {
 
     return categories
   }
+  
+  async getCategoryById(id: string): Promise<CategoryModel | null> {
+    return await prismaClient.category.findUnique({
+      where: { id },
+    })
+
+  }
 
   async updateCategory(
     data: UpdateCategoryInput,

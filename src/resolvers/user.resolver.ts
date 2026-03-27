@@ -17,7 +17,7 @@ type UserResolverDeps = {
 }
 
 @Resolver(() => UserModel)
-@UseMiddleware(authMiddleware)
+// @UseMiddleware(authMiddleware)
 export class UserResolver {
   private userService: UserService
   constructor(deps?: UserResolverDeps) {
