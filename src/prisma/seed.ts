@@ -12,7 +12,6 @@ const prisma = new PrismaClient({ adapter })
 
 async function main() {
   const hashedPassword = await hashPassword('hashedpassword')
-  console.log('Hashed password for seed user:', hashedPassword)
   
   // Clean up existing data (delete transactions first due to FK)
   await prisma.user.deleteMany({})
@@ -28,7 +27,6 @@ async function main() {
     },
   })
   
-  console.log('Seed user created:', user.id)
 
   // Create categories
   await prisma.category.createMany({

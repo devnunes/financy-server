@@ -36,7 +36,7 @@ type TransactionResolverDeps = {
 }
 
 @Resolver(() => TransactionModel)
-// @UseMiddleware(authMiddleware)
+@UseMiddleware(authMiddleware)
 export class TransactionResolver {
   private transactionService: Pick<
     TransactionService,
