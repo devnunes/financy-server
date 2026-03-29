@@ -11,12 +11,20 @@ function isSecureCookieEnabled(): boolean {
 }
 
 
-export const REFRESH_TOKEN_COOKIE_OPTIONS: CookieSerializeOptions = {
+export const TOKEN_COOKIE_OPTIONS: CookieSerializeOptions = {
   path: '/',
   httpOnly: true,
   secure: isSecureCookieEnabled(),
   sameSite: 'lax',
   maxAge: 60 * 60 * 24 * 7 // 7 days
+};
+
+export const REFRESH_TOKEN_COOKIE_OPTIONS: CookieSerializeOptions = {
+  path: '/',
+  httpOnly: true,
+  secure: isSecureCookieEnabled(),
+  sameSite: 'lax',
+  maxAge: 60 * 60 * 24 * 14 // 14 days
 };
 
 function serializeCookie(name: string, value: string): string {

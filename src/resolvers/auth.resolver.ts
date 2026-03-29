@@ -3,7 +3,7 @@ import { SignInInput, SignUpInput } from '@/dtos/input/auth.input'
 import { SignInOutput, SignUpOutput } from '@/dtos/output/auth.output'
 import type { GraphQLContext } from '@/graphql/context'
 import { AuthService } from '@/services/auth.service'
-import { REFRESH_TOKEN_COOKIE_OPTIONS, setSessionCookie } from '@/utils/cookie'
+import { REFRESH_TOKEN_COOKIE_OPTIONS, TOKEN_COOKIE_OPTIONS } from '@/utils/cookie'
 import { isLeft } from '@/utils/either'
 
 type AuthResolverDeps = {
@@ -24,12 +24,8 @@ export class AuthResolver {
     const result = await this.authService.signUp(data)
     if (isLeft(result)) throw result.left
 
-    setSessionCookie(context.res, result.right.token)
-    context.res.setCookie('refreshToken', result.right.refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    })
+    context.res.setCookie('session_token', result.right.token, TOKEN_COOKIE_OPTIONS)
+    context.res.setCookie('refreshToken', result.right.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS)
     return result.right
   }
 
@@ -40,6 +36,8 @@ export class AuthResolver {
   ): Promise<SignInOutput> {
     const result = await this.authService.signIn(data)
     if (isLeft(result)) throw result.left
+    
+    context.res.setCookie('session_token', result.right.token, TOKEN_COOKIE_OPTIONS)
     context.res.setCookie('refreshToken', result.right.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS)
 
     return result.right
@@ -47,8 +45,8 @@ export class AuthResolver {
 
   @Mutation(() => Boolean)
   async signout(@Ctx() context: GraphQLContext): Promise<boolean> {
-    setSessionCookie(context.res, '', { maxAge: -1 })
-    context.res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax' })
+    context.res.clearCookie('session_token', TOKEN_COOKIE_OPTIONS)
+    context.res.clearCookie('refreshToken', REFRESH_TOKEN_COOKIE_OPTIONS)
     return true
   }
 }
