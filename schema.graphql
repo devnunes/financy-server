@@ -42,8 +42,8 @@ type Mutation {
   deleteCategory(id: String!): Boolean!
   deleteTransaction(id: String!): Boolean!
   signIn(data: SignInInput!): SignInOutput!
+  signOut: Boolean!
   signUp(data: SignUpInput!): SignUpOutput!
-  signout: Boolean!
   updateCategory(data: UpdateCategoryInput!): CategoryModel!
   updateTransaction(data: UpdateTransactionInput!): TransactionModel!
   updateUser(data: UpdateUserInput!): Boolean!

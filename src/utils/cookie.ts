@@ -1,5 +1,4 @@
 import type { FastifyReply } from 'fastify'
-import { CookieSerializeOptions } from '@fastify/cookie';
 import { env } from '@/env'
 
 export const SESSION_COOKIE_NAME = 'session_token'
@@ -9,23 +8,6 @@ function isSecureCookieEnabled(): boolean {
   if (env.NODE_ENV === 'production') return true
   return (env.WEB_URL ?? '').startsWith('https://')
 }
-
-
-export const TOKEN_COOKIE_OPTIONS: CookieSerializeOptions = {
-  path: '/',
-  httpOnly: true,
-  secure: isSecureCookieEnabled(),
-  sameSite: 'lax',
-  maxAge: 60 * 60 * 24 * 7 // 7 days
-};
-
-export const REFRESH_TOKEN_COOKIE_OPTIONS: CookieSerializeOptions = {
-  path: '/',
-  httpOnly: true,
-  secure: isSecureCookieEnabled(),
-  sameSite: 'lax',
-  maxAge: 60 * 60 * 24 * 14 // 14 days
-};
 
 function serializeCookie(name: string, value: string): string {
   const parts = [
@@ -66,6 +48,10 @@ export function setSessionCookie(
   }
 
   reply.header('Set-Cookie', serializeCookie(SESSION_COOKIE_NAME, token))
+}
+
+export function clearSessionCookie(reply: FastifyReply): void {
+  setSessionCookie(reply, '', { maxAge: 0 })
 }
 
 export function getCookieFromHeader(

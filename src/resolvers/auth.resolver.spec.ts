@@ -29,20 +29,26 @@ function makeResolverSetup(
   type: 'signIn' | 'signUp',
   overrides?: Partial<SignInSetup | SignUpSetup>
 ): SignInSetup | SignUpSetup {
-  const data = {
-    input: {
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      ...overrides?.input,
-    },
-  }
   if (type === 'signUp') {
-    Object.assign(data.input, {
-      password: faker.internet.password(),
-    })
+    const data: SignUpSetup = {
+      input: {
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+        ...(overrides?.input as Partial<SignUpInput>),
+      },
+    }
+    return data
+  } else {
+    const data: SignInSetup = {
+      input: {
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+        ...(overrides?.input as Partial<SignInInput>),
+      },
+    }
     return data
   }
-  return data
 }
 
 describe('AuthResolver.signUp', () => {
@@ -190,5 +196,24 @@ describe('AuthResolver.signIn', () => {
       expect.stringContaining('session_token=')
     )
     expect(result.user.email).toBe(input.email)
+  })
+})
+
+describe('AuthResolver.signOut', () => {
+  it('should clear session cookie', async () => {
+    const context = makeContext()
+    const resolver = new AuthResolver()
+
+    const result = await resolver.signOut(context)
+
+    expect(result).toBe(true)
+    expect(context.res.header).toHaveBeenCalledWith(
+      'Set-Cookie',
+      expect.stringContaining('session_token=')
+    )
+    expect(context.res.header).toHaveBeenCalledWith(
+      'Set-Cookie',
+      expect.stringContaining('Max-Age=0')
+    )
   })
 })

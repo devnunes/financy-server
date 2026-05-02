@@ -22,7 +22,7 @@ Fornecer autenticação e gerenciamento de dados financeiros por usuário, garan
 
 - `signUp`
 - `signIn`
-- `signout`
+- `signOut`
 - Sessão via cookie HTTP
 - Middleware de autenticação para rotas privadas
 

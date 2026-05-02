@@ -254,6 +254,7 @@ describe('CategoryResolver.user', () => {
     const result = await resolver.user({ userId } as never)
 
     expect(getUserById).toHaveBeenCalledWith(userId)
-    expect(result.id).toBe(userId)
+    expect(result).not.toBeNull()
+    expect(result?.id).toBe(userId)
   })
 })
