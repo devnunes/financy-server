@@ -87,7 +87,11 @@ async function main() {
   const allCategories = await prisma.category.findMany({
     where: { userId: user.id },
   })
-  const getCategoryId = title => allCategories.find(c => c.title === title)?.id
+  const getCategoryId = (title: string) => {
+    const id = allCategories.find(c => c.title === title)?.id
+    if (!id) throw new Error(`Category with title '${title}' not found`)
+    return id
+  }
 
   await prisma.transaction.createMany({
     data: [
