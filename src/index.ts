@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { ApolloServer } from '@apollo/server'
 import fastifyApollo from '@as-integrations/fastify'
+import fastifyCookie from '@fastify/cookie'
 import { fastifyCors } from '@fastify/cors'
 import fastify from 'fastify'
 import {
@@ -12,7 +13,6 @@ import { buildSchema } from 'type-graphql'
 import { env } from '@/env'
 import { buildContext, type GraphQLContext } from './graphql/context'
 import { resolvers } from './resolvers'
-import fastifyCookie from '@fastify/cookie'
 
 const app = fastify()
 
@@ -52,8 +52,8 @@ app.register(fastifyCors, {
 })
 
 await app.register(fastifyCookie, {
-  secret: env.COOKIE_SECRET, 
-});
+  secret: env.COOKIE_SECRET,
+})
 
 app.register(fastifyApollo(server), {
   path: '/graphql',

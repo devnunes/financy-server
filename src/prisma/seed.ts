@@ -12,7 +12,7 @@ const prisma = new PrismaClient({ adapter })
 
 async function main() {
   const hashedPassword = await hashPassword('hashedpassword')
-  
+
   // Clean up existing data (delete transactions first due to FK)
   await prisma.user.deleteMany({})
   await prisma.transaction.deleteMany({})
@@ -26,7 +26,6 @@ async function main() {
       password: hashedPassword, // Use a hashed password in production
     },
   })
-  
 
   // Create categories
   await prisma.category.createMany({
