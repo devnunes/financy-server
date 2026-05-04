@@ -3,6 +3,21 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+type CategoriesSummaryModel {
+  color: String!
+  createdAt: DateTimeISO!
+  description: String!
+  icon: String!
+  id: ID!
+  title: String!
+  totalAmount: Int!
+  transactionCount: Int!
+  transactions: [CategoryTransactionAmount!]
+  updatedAt: DateTimeISO!
+  user: UserModel
+  userId: String!
+}
+
 type CategoryModel {
   color: String!
   createdAt: DateTimeISO!
@@ -10,10 +25,15 @@ type CategoryModel {
   icon: String!
   id: ID!
   title: String!
+  transactionCount: Int
   transactions: [TransactionModel!]
   updatedAt: DateTimeISO!
   user: UserModel
   userId: String!
+}
+
+type CategoryTransactionAmount {
+  amount: Int!
 }
 
 input CreateCategoryInput {
@@ -51,6 +71,7 @@ type Mutation {
 
 type Query {
   getCategories: [CategoryModel!]!
+  getCategoriesSummary: [CategoriesSummaryModel!]!
   getTransactionSummary: TransactionSummaryModel!
   getTransactions: [TransactionModel!]!
   getUser(id: String!): UserModel!

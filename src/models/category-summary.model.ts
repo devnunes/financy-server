@@ -1,9 +1,14 @@
 import { Field, GraphQLISODateTime, ID, Int, ObjectType } from 'type-graphql'
-import { TransactionModel } from './transaction.model'
 import { UserModel } from './user.model'
 
 @ObjectType()
-export class CategoryModel {
+export class CategoryTransactionAmount {
+  @Field(() => Int)
+  amount!: number
+}
+
+@ObjectType()
+export class CategoriesSummaryModel {
   @Field(() => ID)
   id!: string
 
@@ -31,9 +36,12 @@ export class CategoryModel {
   @Field(() => UserModel, { nullable: true })
   user?: UserModel
 
-  @Field(() => [TransactionModel], { nullable: true })
-  transactions?: TransactionModel[]
+  @Field(() => [CategoryTransactionAmount], { nullable: true })
+  transactions?: CategoryTransactionAmount[]
 
-  @Field(() => Int, { nullable: true })
-  transactionCount?: number
+  @Field(() => Int)
+  totalAmount!: number
+
+  @Field(() => Int)
+  transactionCount!: number
 }

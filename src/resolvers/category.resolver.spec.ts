@@ -67,6 +67,7 @@ describe('CategoryResolver.createCategory', () => {
       categoryService: {
         createCategory,
         getCategories: vi.fn(),
+        getCategoriesSummary: vi.fn(),
         updateCategory: vi.fn(),
         deleteCategory: vi.fn(),
       },
@@ -124,6 +125,7 @@ describe('CategoryResolver.getCategories', () => {
       categoryService: {
         createCategory: vi.fn(),
         getCategories,
+        getCategoriesSummary: vi.fn(),
         updateCategory: vi.fn(),
         deleteCategory: vi.fn(),
       },
@@ -162,6 +164,7 @@ describe('CategoryResolver.updateCategory', () => {
       categoryService: {
         createCategory: vi.fn(),
         getCategories: vi.fn(),
+        getCategoriesSummary: vi.fn(),
         updateCategory,
         deleteCategory: vi.fn(),
       },
@@ -204,6 +207,7 @@ describe('CategoryResolver.deleteCategory', () => {
       categoryService: {
         createCategory: vi.fn(),
         getCategories: vi.fn(),
+        getCategoriesSummary: vi.fn(),
         updateCategory: vi.fn(),
         deleteCategory,
       },
@@ -246,6 +250,7 @@ describe('CategoryResolver.user', () => {
       categoryService: {
         createCategory: vi.fn(),
         getCategories: vi.fn(),
+        getCategoriesSummary: vi.fn(),
         updateCategory: vi.fn(),
         deleteCategory: vi.fn(),
       },

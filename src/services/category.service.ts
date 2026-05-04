@@ -3,6 +3,7 @@ import type {
   UpdateCategoryInput,
 } from '@/dtos/input/category.input'
 import type { CategoryModel } from '@/models/category.model'
+import type { CategoriesSummaryModel } from '@/models/category-summary.model'
 import { prismaClient } from '@/prisma/prisma'
 
 export class CategoryService {
@@ -22,9 +23,17 @@ export class CategoryService {
     const categories = await prismaClient.category.findMany({
       where: { userId },
       orderBy: { id: 'desc' },
+      include: {
+        _count: {
+          select: { transactions: true },
+        },
+      },
     })
 
-    return categories
+    return categories.map(category => ({
+      ...category,
+      transactionCount: category._count.transactions,
+    }))
   }
 
   async getCategoryById(id: string): Promise<CategoryModel | null> {
@@ -75,5 +84,38 @@ export class CategoryService {
 
     if (!category) return false
     return category.userId === userId
+  }
+
+  async getCategoriesSummary(
+    userId: string
+  ): Promise<CategoriesSummaryModel[]> {
+    const categoriesSummary = await prismaClient.category.findMany({
+      where: { userId },
+      include: {
+        transactions: {
+          select: {
+            amount: true,
+          },
+        },
+        _count: {
+          select: { transactions: true },
+        },
+      },
+    })
+
+    const results = await Promise.all(
+      categoriesSummary.map(async category => {
+        const sumResult = await prismaClient.transaction.aggregate({
+          where: { categoryId: category.id },
+          _sum: { amount: true },
+        })
+        return {
+          ...category,
+          transactionCount: category._count.transactions,
+          totalAmount: sumResult._sum.amount || 0,
+        }
+      })
+    )
+    return results
   }
 }

@@ -20,6 +20,7 @@ import {
 import type { GraphQLContext } from '@/graphql/context'
 import { authMiddleware } from '@/middlewares/auth.middleware'
 import { CategoryModel } from '@/models/category.model'
+import { CategoriesSummaryModel } from '@/models/category-summary.model'
 import { UserModel } from '@/models/user.model'
 import { CategoryService } from '@/services/category.service'
 import { UserService } from '@/services/user.service'
@@ -27,7 +28,11 @@ import { UserService } from '@/services/user.service'
 type CategoryResolverDeps = {
   categoryService?: Pick<
     CategoryService,
-    'createCategory' | 'getCategories' | 'updateCategory' | 'deleteCategory'
+    | 'createCategory'
+    | 'getCategories'
+    | 'updateCategory'
+    | 'deleteCategory'
+    | 'getCategoriesSummary'
   >
   userService?: Pick<UserService, 'getUserById'>
 }
@@ -37,7 +42,11 @@ type CategoryResolverDeps = {
 export class CategoryResolver {
   private categoryService: Pick<
     CategoryService,
-    'createCategory' | 'getCategories' | 'updateCategory' | 'deleteCategory'
+    | 'createCategory'
+    | 'getCategories'
+    | 'updateCategory'
+    | 'deleteCategory'
+    | 'getCategoriesSummary'
   >
   private userService: Pick<UserService, 'getUserById'>
   constructor(deps?: CategoryResolverDeps) {
@@ -100,6 +109,15 @@ export class CategoryResolver {
     if (!context.userId) throw new Error('Unauthorized')
 
     return this.categoryService.deleteCategory(id, context.userId)
+  }
+
+  @Query(() => [CategoriesSummaryModel])
+  async getCategoriesSummary(
+    @Ctx() context: GraphQLContext
+  ): Promise<CategoriesSummaryModel[]> {
+    if (!context.userId) throw new Error('Unauthorized')
+
+    return this.categoryService.getCategoriesSummary(context.userId)
   }
 
   @FieldResolver(() => UserModel, { nullable: true })
