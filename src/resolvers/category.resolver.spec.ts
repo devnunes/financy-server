@@ -13,7 +13,7 @@ type createSetup = {
 }
 
 type getSetup = {
-  input: { userId: string }
+  input: { currentUserId: string }
   context: GraphQLContext
 }
 
@@ -40,7 +40,7 @@ function makeResolverSetup(
       ...overrides?.input,
     },
     context: {
-      userId: faker.string.uuid(),
+      currentUserId: faker.string.uuid(),
       ...overrides?.context,
     } as GraphQLContext,
   }
@@ -58,7 +58,7 @@ describe('CategoryResolver.createCategory', () => {
     const createCategory = vi.fn().mockResolvedValue({
       id: 'category-id',
       ...input,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -75,10 +75,10 @@ describe('CategoryResolver.createCategory', () => {
 
     const result = await resolver.createCategory(input, context)
 
-    expect(createCategory).toHaveBeenCalledWith(input, context.userId)
+    expect(createCategory).toHaveBeenCalledWith(input, context.currentUserId)
     expect(result).toMatchObject({
       id: 'category-id',
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       title: input.title,
       description: input.description,
       icon: input.icon,
@@ -90,7 +90,7 @@ describe('CategoryResolver.createCategory', () => {
     const resolver = new CategoryResolver()
     const { input, context } = makeResolverSetup('create', {
       context: {
-        userId: undefined,
+        currentUserId: undefined,
       } as GraphQLContext,
     }) as createSetup
 
@@ -103,7 +103,7 @@ describe('CategoryResolver.createCategory', () => {
 describe('CategoryResolver.getCategories', () => {
   it('should delegate fetching to CategoryService', async () => {
     const context = {
-      userId: faker.string.uuid(),
+      currentUserId: faker.string.uuid(),
     } as GraphQLContext
 
     const categorys = [
@@ -113,7 +113,7 @@ describe('CategoryResolver.getCategories', () => {
         description: faker.lorem.sentence(),
         icon: faker.helpers.arrayElement(['income', 'expense']),
         color: faker.color.human(),
-        userId: context.userId,
+        currentUserId: context.currentUserId,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -133,14 +133,14 @@ describe('CategoryResolver.getCategories', () => {
 
     const result = await resolver.getCategories(context)
 
-    expect(getCategories).toHaveBeenCalledWith(context.userId)
+    expect(getCategories).toHaveBeenCalledWith(context.currentUserId)
     expect(result).toEqual(categorys)
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
     const resolver = new CategoryResolver()
     const context = {
-      userId: undefined,
+      currentUserId: undefined,
     } as GraphQLContext
 
     await expect(resolver.getCategories(context)).rejects.toThrow(
@@ -155,7 +155,7 @@ describe('CategoryResolver.updateCategory', () => {
 
     const updateCategory = vi.fn().mockResolvedValue({
       ...input,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -172,10 +172,10 @@ describe('CategoryResolver.updateCategory', () => {
 
     const result = await resolver.updateCategory(input, context)
 
-    expect(updateCategory).toHaveBeenCalledWith(input, context.userId)
+    expect(updateCategory).toHaveBeenCalledWith(input, context.currentUserId)
     expect(result).toMatchObject({
       id: input.id,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       title: input.title,
       description: input.description,
       icon: input.icon,
@@ -187,7 +187,7 @@ describe('CategoryResolver.updateCategory', () => {
     const resolver = new CategoryResolver()
     const { input, context } = makeResolverSetup('update', {
       context: {
-        userId: undefined,
+        currentUserId: undefined,
       } as GraphQLContext,
     }) as updateSetup
 
@@ -215,7 +215,7 @@ describe('CategoryResolver.deleteCategory', () => {
 
     const result = await resolver.deleteCategory(input.id, context)
 
-    expect(deleteCategory).toHaveBeenCalledWith(input.id, context.userId)
+    expect(deleteCategory).toHaveBeenCalledWith(input.id, context.currentUserId)
     expect(result).toBe(true)
   })
 
@@ -223,7 +223,7 @@ describe('CategoryResolver.deleteCategory', () => {
     const resolver = new CategoryResolver()
     const { input, context } = makeResolverSetup('update', {
       context: {
-        userId: undefined,
+        currentUserId: undefined,
       } as GraphQLContext,
     }) as deleteSetup
 

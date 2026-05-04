@@ -4,12 +4,12 @@ import type { User } from '@/prisma/generated/client'
 import { prismaClient } from '@/prisma/prisma'
 import { type Either, makeLeft, makeRight } from '@/utils/either'
 import { comparePassword, hashPassword } from '@/utils/hash'
-import { signJwt } from '@/utils/jwt'
+import { jwtUtils } from '@/utils/jwt'
 
 export class AuthService {
   generateTokens(user: User) {
-    const token = signJwt({ id: user.id, email: user.email }, '7d')
-    const refreshToken = signJwt({ id: user.id, email: user.email }, '14d')
+    const token = jwtUtils.signAccessToken(user.id)
+    const refreshToken = jwtUtils.signRefreshToken(user.id)
     return { token, refreshToken, user }
   }
 
@@ -31,7 +31,7 @@ export class AuthService {
     return makeRight(this.generateTokens(createdUser))
   }
 
-  async signIn(data: SignInInput): Promise<Either<Error, SignInOutput>> {
+  async validateUser(data: SignInInput): Promise<Either<Error, SignInOutput>> {
     const user = await prismaClient.user.findUnique({
       where: {
         email: data.email,
@@ -41,6 +41,6 @@ export class AuthService {
     const isPasswordValid = await comparePassword(data.password, user.password)
     if (!isPasswordValid) return makeLeft(new Error('Invalid password'))
 
-    return makeRight(this.generateTokens(user))
+    return makeRight({ user })
   }
 }

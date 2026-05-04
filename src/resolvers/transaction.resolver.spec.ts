@@ -14,7 +14,7 @@ type createSetup = {
 }
 
 type getSetup = {
-  input: { userId: string }
+  input: { currentUserId: string }
   context: GraphQLContext
 }
 
@@ -33,14 +33,14 @@ function makeResolverSetup(
   overrides?: Partial<createSetup | updateSetup | deleteSetup | getSetup>
 ): createSetup | updateSetup | deleteSetup | getSetup {
   const context = {
-    userId: faker.string.uuid(),
+    currentUserId: faker.string.uuid(),
     ...overrides?.context,
   } as GraphQLContext
 
   if (method === 'get') {
     return {
       input: {
-        userId: faker.string.uuid(),
+        currentUserId: faker.string.uuid(),
         ...(overrides?.input as Partial<getSetup['input']>),
       },
       context,
@@ -92,7 +92,7 @@ describe('TransactionResolver.createTransaction', () => {
     const createTransaction = vi.fn().mockResolvedValue({
       id: 'transaction-id',
       ...input,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -105,14 +105,18 @@ describe('TransactionResolver.createTransaction', () => {
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
       },
+      categoryService: {
+        getCategoryById: vi.fn(),
+        categoryBelongsToUser: vi.fn().mockResolvedValue(true),
+      },
     })
 
     const result = await resolver.createTransaction(input, context)
 
-    expect(createTransaction).toHaveBeenCalledWith(input, context.userId)
+    expect(createTransaction).toHaveBeenCalledWith(input, context.currentUserId)
     expect(result).toMatchObject({
       id: 'transaction-id',
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       amount: input.amount,
       description: input.description,
       type: input.type,
@@ -126,7 +130,7 @@ describe('TransactionResolver.createTransaction', () => {
     })
     const { input, context } = makeResolverSetup('create', {
       context: {
-        userId: undefined,
+        currentUserId: undefined,
       } as GraphQLContext,
     }) as createSetup
 
@@ -139,7 +143,7 @@ describe('TransactionResolver.createTransaction', () => {
 describe('TransactionResolver.getTransactions', () => {
   it('should delegate fetching to TransactionService', async () => {
     const context = {
-      userId: faker.string.uuid(),
+      currentUserId: faker.string.uuid(),
     } as GraphQLContext
 
     const transactions = [
@@ -150,7 +154,7 @@ describe('TransactionResolver.getTransactions', () => {
         type: faker.helpers.arrayElement(['income', 'expense']),
         category: faker.lorem.word(),
         date: faker.date.recent(),
-        userId: context.userId,
+        currentUserId: context.currentUserId,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -170,14 +174,14 @@ describe('TransactionResolver.getTransactions', () => {
 
     const result = await resolver.getTransactions(context)
 
-    expect(getTransactions).toHaveBeenCalledWith(context.userId)
+    expect(getTransactions).toHaveBeenCalledWith(context.currentUserId)
     expect(result).toEqual(transactions)
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
     const resolver = new TransactionResolver()
     const context = {
-      userId: undefined,
+      currentUserId: undefined,
     } as GraphQLContext
 
     await expect(resolver.getTransactions(context)).rejects.toThrow(
@@ -189,7 +193,7 @@ describe('TransactionResolver.getTransactions', () => {
 describe('TransactionResolver.getTransactionSummary', () => {
   it('should delegate summary fetching to TransactionService', async () => {
     const context = {
-      userId: faker.string.uuid(),
+      currentUserId: faker.string.uuid(),
     } as GraphQLContext
 
     const getTransactionSummary = vi.fn().mockResolvedValue({
@@ -210,7 +214,7 @@ describe('TransactionResolver.getTransactionSummary', () => {
 
     const result = await resolver.getTransactionSummary(context)
 
-    expect(getTransactionSummary).toHaveBeenCalledWith(context.userId)
+    expect(getTransactionSummary).toHaveBeenCalledWith(context.currentUserId)
     expect(result).toEqual({
       balance: 170,
       income: 250,
@@ -221,7 +225,7 @@ describe('TransactionResolver.getTransactionSummary', () => {
   it('should throw Unauthorized when context has no userId', async () => {
     const resolver = new TransactionResolver()
     const context = {
-      userId: undefined,
+      currentUserId: undefined,
     } as GraphQLContext
 
     await expect(resolver.getTransactionSummary(context)).rejects.toThrow(
@@ -236,7 +240,7 @@ describe('TransactionResolver.updateTransaction', () => {
 
     const updateTransaction = vi.fn().mockResolvedValue({
       ...input,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -249,14 +253,18 @@ describe('TransactionResolver.updateTransaction', () => {
         updateTransaction,
         deleteTransaction: vi.fn(),
       },
+      categoryService: {
+        getCategoryById: vi.fn(),
+        categoryBelongsToUser: vi.fn().mockResolvedValue(true),
+      },
     })
 
     const result = await resolver.updateTransaction(input, context)
 
-    expect(updateTransaction).toHaveBeenCalledWith(input, context.userId)
+    expect(updateTransaction).toHaveBeenCalledWith(input, context.currentUserId)
     expect(result).toMatchObject({
       id: input.id,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       amount: input.amount,
       description: input.description,
       type: input.type,
@@ -267,7 +275,7 @@ describe('TransactionResolver.updateTransaction', () => {
     const resolver = new TransactionResolver()
     const { input, context } = makeResolverSetup('update', {
       context: {
-        userId: undefined,
+        currentUserId: undefined,
       } as GraphQLContext,
     }) as updateSetup
 
@@ -295,7 +303,10 @@ describe('TransactionResolver.deleteTransaction', () => {
 
     const result = await resolver.deleteTransaction(input.id, context)
 
-    expect(deleteTransaction).toHaveBeenCalledWith(input.id, context.userId)
+    expect(deleteTransaction).toHaveBeenCalledWith(
+      input.id,
+      context.currentUserId
+    )
     expect(result).toBe(true)
   })
 
@@ -303,7 +314,7 @@ describe('TransactionResolver.deleteTransaction', () => {
     const resolver = new TransactionResolver()
     const { input, context } = makeResolverSetup('update', {
       context: {
-        userId: undefined,
+        currentUserId: undefined,
       } as GraphQLContext,
     }) as deleteSetup
 

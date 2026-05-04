@@ -15,12 +15,6 @@ export class SignUpOutput {
 
 @ObjectType()
 export class SignInOutput {
-  @Field(() => String)
-  token!: string
-
-  @Field(() => String)
-  refreshToken!: string
-
   @Field(() => UserModel)
   user!: UserModel
 }

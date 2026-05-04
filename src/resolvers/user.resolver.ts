@@ -31,8 +31,8 @@ export class UserResolver {
 
   @Query(() => UserModel)
   async me(@Ctx() context: GraphQLContext): Promise<UserModel> {
-    if (!context.userId) throw new Error('Unauthorized')
-    return this.userService.getUserById(context.userId)
+    if (!context.currentUserId) throw new Error('Unauthorized')
+    return this.userService.getUserById(context.currentUserId)
   }
 
   @Mutation(() => Boolean)
@@ -40,7 +40,7 @@ export class UserResolver {
     @Arg('data', () => UpdateUserInput) data: UpdateUserInput,
     @Ctx() context: GraphQLContext
   ): Promise<boolean> {
-    if (!context.userId) throw new Error('Unauthorized')
-    return this.userService.updateUser(data, context.userId)
+    if (!context.currentUserId) throw new Error('Unauthorized')
+    return this.userService.updateUser(data, context.currentUserId)
   }
 }

@@ -12,6 +12,7 @@ import { createUserFactory } from '@/test/factories/user.factory'
 describe('TransactionService.createTransaction', () => {
   it('should create a transaction', async () => {
     const user = await createUserFactory()
+    const { id: categoryId } = await createCategoryFactory(user.id)
 
     const service = new TransactionService()
 
@@ -20,6 +21,7 @@ describe('TransactionService.createTransaction', () => {
         amount: 100,
         description: 'Test transaction',
         type: 'income',
+        categoryId,
         date: new Date(),
       } as CreateTransactionInput,
       user.id

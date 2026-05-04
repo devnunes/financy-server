@@ -59,10 +59,13 @@ export class CategoryResolver {
     @Arg('data', () => CreateCategoryInput) data: CreateCategoryInput,
     @Ctx() context: GraphQLContext
   ): Promise<CategoryModel> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
     try {
       const validated = CreateCategoryInputSchema.parse(data)
-      return this.categoryService.createCategory(validated, context.userId)
+      return this.categoryService.createCategory(
+        validated,
+        context.currentUserId
+      )
     } catch (err) {
       if (err instanceof ZodError) {
         throw new Error(
@@ -77,9 +80,9 @@ export class CategoryResolver {
   async getCategories(
     @Ctx() context: GraphQLContext
   ): Promise<CategoryModel[]> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.categoryService.getCategories(context.userId)
+    return this.categoryService.getCategories(context.currentUserId)
   }
 
   @Mutation(() => CategoryModel)
@@ -87,10 +90,13 @@ export class CategoryResolver {
     @Arg('data', () => UpdateCategoryInput) data: UpdateCategoryInput,
     @Ctx() context: GraphQLContext
   ): Promise<CategoryModel> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
     try {
       const validated = UpdateCategoryInputSchema.parse(data)
-      return this.categoryService.updateCategory(validated, context.userId)
+      return this.categoryService.updateCategory(
+        validated,
+        context.currentUserId
+      )
     } catch (err) {
       if (err instanceof ZodError) {
         throw new Error(
@@ -106,18 +112,18 @@ export class CategoryResolver {
     @Arg('id', () => String) id: string,
     @Ctx() context: GraphQLContext
   ): Promise<boolean> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.categoryService.deleteCategory(id, context.userId)
+    return this.categoryService.deleteCategory(id, context.currentUserId)
   }
 
   @Query(() => [CategoriesSummaryModel])
   async getCategoriesSummary(
     @Ctx() context: GraphQLContext
   ): Promise<CategoriesSummaryModel[]> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.categoryService.getCategoriesSummary(context.userId)
+    return this.categoryService.getCategoriesSummary(context.currentUserId)
   }
 
   @FieldResolver(() => UserModel, { nullable: true })

@@ -5,7 +5,7 @@ export const authMiddleware: MiddlewareFn<GraphQLContext> = async (
   { context },
   next
 ) => {
-  if (!context.userId) throw new Error('Unauthorized')
+  if (!context.currentUserId) throw new Error('Unauthorized')
 
   return next()
 }

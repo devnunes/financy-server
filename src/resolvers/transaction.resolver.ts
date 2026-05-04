@@ -67,33 +67,36 @@ export class TransactionResolver {
     @Arg('data', () => CreateTransactionInput) data: CreateTransactionInput,
     @Ctx() context: GraphQLContext
   ): Promise<TransactionModel> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
     const categoryBelongsToUser =
       await this.categoryService.categoryBelongsToUser(
         data.categoryId,
-        context.userId
+        context.currentUserId
       )
     if (!categoryBelongsToUser) throw new Error('Unauthorized')
 
-    return this.transactionService.createTransaction(data, context.userId)
+    return this.transactionService.createTransaction(
+      data,
+      context.currentUserId
+    )
   }
 
   @Query(() => [TransactionModel])
   async getTransactions(
     @Ctx() context: GraphQLContext
   ): Promise<TransactionModel[]> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.transactionService.getTransactions(context.userId)
+    return this.transactionService.getTransactions(context.currentUserId)
   }
 
   @Query(() => TransactionSummaryModel)
   async getTransactionSummary(
     @Ctx() context: GraphQLContext
   ): Promise<TransactionSummaryModel> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.transactionService.getTransactionSummary(context.userId)
+    return this.transactionService.getTransactionSummary(context.currentUserId)
   }
 
   @Mutation(() => TransactionModel)
@@ -101,18 +104,21 @@ export class TransactionResolver {
     @Arg('data', () => UpdateTransactionInput) data: UpdateTransactionInput,
     @Ctx() context: GraphQLContext
   ): Promise<TransactionModel> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
 
     if (data.categoryId) {
       const categoryBelongsToUser =
         await this.categoryService.categoryBelongsToUser(
           data.categoryId,
-          context.userId
+          context.currentUserId
         )
       if (!categoryBelongsToUser) throw new Error('Unauthorized')
     }
 
-    return this.transactionService.updateTransaction(data, context.userId)
+    return this.transactionService.updateTransaction(
+      data,
+      context.currentUserId
+    )
   }
 
   @Mutation(() => Boolean)
@@ -120,9 +126,9 @@ export class TransactionResolver {
     @Arg('id', () => String) id: string,
     @Ctx() context: GraphQLContext
   ): Promise<boolean> {
-    if (!context.userId) throw new Error('Unauthorized')
+    if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.transactionService.deleteTransaction(id, context.userId)
+    return this.transactionService.deleteTransaction(id, context.currentUserId)
   }
 
   @FieldResolver(() => UserModel, { nullable: true })

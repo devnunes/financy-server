@@ -10,7 +10,7 @@ describe('authMiddleware', () => {
       authMiddleware(
         {
           context: {
-            userId: undefined,
+            currentUserId: undefined,
           } as GraphQLContext,
         } as never,
         next
@@ -26,7 +26,7 @@ describe('authMiddleware', () => {
     const result = await authMiddleware(
       {
         context: {
-          userId: 'user-id',
+          currentUserId: 'user-id',
         } as GraphQLContext,
       } as never,
       next

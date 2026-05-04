@@ -44,8 +44,18 @@ const server = new ApolloServer<GraphQLContext>({
 })
 await server.start()
 
+const frontendOrigin = env.WEB_URL || 'http://localhost:5173'
+
 app.register(fastifyCors, {
-  origin: env.WEB_URL || 'http://localhost:5173',
+  origin: (origin, cb) => {
+    // Only allow the configured frontend origin for credentialed requests.
+    if (!origin) {
+      cb(null, true)
+      return
+    }
+
+    cb(null, origin === frontendOrigin)
+  },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
   methods: ['GET', 'POST', 'DELETE'],

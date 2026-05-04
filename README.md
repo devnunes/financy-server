@@ -56,15 +56,16 @@ Environment variables validated in `src/env.ts`:
 - `NODE_ENV` (optional, default `production`)
 - `DATABASE_URL` (required, SQLite format `file:`)
 - `JWT_SECRET` (required)
+- `JWT_REFRESH_SECRET` (required)
 - `COOKIE_SECRET` (required)
-- `WEB_URL` (optional)
+- `WEB_URL` (required for explicit credentialed CORS origin; e.g. `http://localhost:5173`)
 
 ## Local Development Setup
 
 ```bash
 pnpm install
 cp .env.example .env.dev
-# Ensure .env.dev contains DATABASE_URL, JWT_SECRET, and COOKIE_SECRET
+# Ensure .env.dev contains DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET, COOKIE_SECRET, and WEB_URL
 pnpm dev:generate
 pnpm dev:migrate
 pnpm dev
@@ -94,7 +95,7 @@ Test coverage includes:
 - auth middleware
 - authorization and error scenarios
 
-Test runs use `.env.test`. Ensure it includes `DATABASE_URL`, `JWT_SECRET`, and `COOKIE_SECRET`.
+Test runs use `.env.test`. Ensure it includes `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECRET`, and `WEB_URL`.
 
 ## Project Structure
 

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { AuthService } from '@/services/auth.service'
 import { createUserFactory } from '@/test/factories/user.factory'
 import { isLeft, isRight, unwrapEither } from '@/utils/either'
-import { verifyJwt } from '@/utils/jwt'
 
 describe('AuthService.signUp', () => {
   it('creates a new user and returns signed tokens', async () => {
@@ -28,11 +27,6 @@ describe('AuthService.signUp', () => {
         }),
       })
     )
-    const tokenPayload = verifyJwt(result.right.token)
-    const refreshTokenPayload = verifyJwt(result.right.refreshToken)
-
-    expect(tokenPayload.email).toBe(user.email)
-    expect(refreshTokenPayload.id).toBe(result.right.user.id)
   })
 
   it('throws when user already exists', async () => {
@@ -49,14 +43,14 @@ describe('AuthService.signUp', () => {
 })
 
 describe('AuthService.signIn', () => {
-  it('returns signed tokens when credentials are valid', async () => {
+  it('returns the user when credentials are valid', async () => {
     const service = new AuthService()
     const password = 'valid-password'
     const user = await createUserFactory({
       password,
     })
 
-    const result = await service.signIn({
+    const result = await service.validateUser({
       email: user.email,
       password,
     })
@@ -66,25 +60,18 @@ describe('AuthService.signIn', () => {
 
     expect(result.right).toEqual(
       expect.objectContaining({
-        token: expect.any(String),
-        refreshToken: expect.any(String),
         user: expect.objectContaining({
           id: expect.any(String),
           email: user.email,
         }),
       })
     )
-    const tokenPayload = verifyJwt(result.right.token)
-    const refreshTokenPayload = verifyJwt(result.right.refreshToken)
-
-    expect(tokenPayload.email).toBe(user.email)
-    expect(refreshTokenPayload.id).toBe(result.right.user.id)
   })
 
   it('throws when credentials are invalid', async () => {
     const service = new AuthService()
     const user = await createUserFactory()
-    const result = await service.signIn({
+    const result = await service.validateUser({
       email: user.email,
       password: 'wrong-password',
     })
@@ -94,7 +81,7 @@ describe('AuthService.signIn', () => {
 
   it('throws when user does not exist', async () => {
     const service = new AuthService()
-    const result = await service.signIn({
+    const result = await service.validateUser({
       email: `not-found-${Date.now()}@mail.com`,
       password: 'any-password',
     })

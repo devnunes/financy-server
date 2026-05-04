@@ -26,7 +26,7 @@ function makeResolverSetup(
       ...overrides?.input,
     },
     context: {
-      userId: faker.string.uuid(),
+      currentUserId: faker.string.uuid(),
       ...overrides?.context,
     } as GraphQLContext,
   }
@@ -43,7 +43,7 @@ describe('UserResolver.updateUser', () => {
 
     const updateUser = vi.fn().mockResolvedValue({
       ...input,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
     })
 
     const resolver = new UserResolver({
@@ -56,21 +56,21 @@ describe('UserResolver.updateUser', () => {
 
     const result = await resolver.updateUser(input, context)
 
-    expect(updateUser).toHaveBeenCalledWith(input, context.userId)
+    expect(updateUser).toHaveBeenCalledWith(input, context.currentUserId)
     expect(result).toMatchObject({
       id: input.id,
-      userId: context.userId,
+      currentUserId: context.currentUserId,
       name: input.name,
       email: input.email,
       password: input.password,
     })
   })
 
-  it('should throw Unauthorized when context has no userId', async () => {
+  it('should throw Unauthorized when context has no currentUserId', async () => {
     const resolver = new UserResolver()
     const { input, context } = makeResolverSetup('update', {
       context: {
-        userId: undefined,
+        currentUserId: undefined,
       } as GraphQLContext,
     }) as updateSetup
 
@@ -106,10 +106,10 @@ describe('UserResolver.getUser', () => {
 })
 
 describe('UserResolver.me', () => {
-  it('should return current user from context.userId', async () => {
-    const userId = faker.string.uuid()
+  it('should return current user from context.currentUserId', async () => {
+    const currentUserId = faker.string.uuid()
     const getUserById = vi.fn().mockResolvedValue({
-      id: userId,
+      id: currentUserId,
       name: faker.person.fullName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
@@ -123,17 +123,17 @@ describe('UserResolver.me', () => {
       },
     })
 
-    const result = await resolver.me({ userId } as GraphQLContext)
+    const result = await resolver.me({ currentUserId } as GraphQLContext)
 
-    expect(getUserById).toHaveBeenCalledWith(userId)
-    expect(result.id).toBe(userId)
+    expect(getUserById).toHaveBeenCalledWith(currentUserId)
+    expect(result.id).toBe(currentUserId)
   })
 
-  it('should throw Unauthorized when context has no userId', async () => {
+  it('should throw Unauthorized when context has no currentUserId', async () => {
     const resolver = new UserResolver()
 
     await expect(
-      resolver.me({ userId: undefined } as GraphQLContext)
+      resolver.me({ currentUserId: undefined } as GraphQLContext)
     ).rejects.toThrow('Unauthorized')
   })
 })
