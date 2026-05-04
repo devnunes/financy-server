@@ -7,10 +7,13 @@ type CreateManyTransactionFactoryInput = {
   type: string
   date: Date
   userId: string
-  categoryId?: string | null
+  categoryId: string
 }
 
-export async function createTransactionFactory(userId: string) {
+export async function createTransactionFactory(
+  userId: string,
+  categoryId: string
+) {
   return prismaClient.transaction.create({
     data: {
       amount: faker.number.int({ min: 1, max: 1000 }),
@@ -18,6 +21,7 @@ export async function createTransactionFactory(userId: string) {
       type: faker.helpers.arrayElement(['income', 'expense']),
       date: faker.date.recent(),
       userId,
+      categoryId,
     },
   })
 }

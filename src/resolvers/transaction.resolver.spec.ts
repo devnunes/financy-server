@@ -32,25 +32,57 @@ function makeResolverSetup(
   method: 'create' | 'update' | 'delete' | 'get',
   overrides?: Partial<createSetup | updateSetup | deleteSetup | getSetup>
 ): createSetup | updateSetup | deleteSetup | getSetup {
-  const data = {
-    input: {
-      amount: faker.number.int({ min: 1, max: 1000 }),
-      description: faker.lorem.sentence(),
-      type: faker.helpers.arrayElement(['income', 'expense']),
-      category: faker.lorem.word(),
-      date: faker.date.recent(),
-      ...overrides?.input,
-    },
-    context: {
-      userId: faker.string.uuid(),
-      ...overrides?.context,
-    } as GraphQLContext,
+  const context = {
+    userId: faker.string.uuid(),
+    ...overrides?.context,
+  } as GraphQLContext
+
+  if (method === 'get') {
+    return {
+      input: {
+        userId: faker.string.uuid(),
+        ...(overrides?.input as Partial<getSetup['input']>),
+      },
+      context,
+    }
   }
+
+  if (method === 'delete') {
+    return {
+      input: {
+        id: faker.string.uuid(),
+        ...(overrides?.input as Partial<deleteSetup['input']>),
+      },
+      context,
+    }
+  }
+
+  const baseInput = {
+    amount: faker.number.int({ min: 1, max: 1000 }),
+    description: faker.lorem.sentence(),
+    type: faker.helpers.arrayElement(['income', 'expense']),
+    categoryId: faker.string.uuid(),
+    date: faker.date.recent(),
+  }
+
   if (method === 'update') {
-    Object.assign(data.input, { id: faker.string.uuid() })
-    return data
+    return {
+      input: {
+        ...baseInput,
+        id: faker.string.uuid(),
+        ...(overrides?.input as Partial<updateSetup['input']>),
+      },
+      context,
+    }
   }
-  return data
+
+  return {
+    input: {
+      ...baseInput,
+      ...(overrides?.input as Partial<createSetup['input']>),
+    },
+    context,
+  }
 }
 
 describe('TransactionResolver.createTransaction', () => {
@@ -307,6 +339,7 @@ describe('TransactionResolver.user', () => {
     const result = await resolver.user({ userId } as never)
 
     expect(getUserById).toHaveBeenCalledWith(userId)
-    expect(result.id).toBe(userId)
+    expect(result).not.toBeNull()
+    expect(result?.id).toBe(userId)
   })
 })

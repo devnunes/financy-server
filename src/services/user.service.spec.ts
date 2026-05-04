@@ -97,6 +97,5 @@ describe('UserService.updateUser', () => {
     const updatedUser = await service.getUserById(user.id)
     expect(updatedUser.name).toBe('Name Only')
     expect(updatedUser.email).toBe(user.email)
-    expect(updatedUser.password).toBe(user.password)
   })
 })

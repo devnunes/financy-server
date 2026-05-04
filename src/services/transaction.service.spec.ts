@@ -1,6 +1,8 @@
 import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
+import type { CreateTransactionInput } from '@/dtos/input/transaction.input'
 import { TransactionService } from '@/services/transaction.service'
+import { createCategoryFactory } from '@/test/factories/category.factory'
 import {
   createManyTransactionsFactory,
   createTransactionFactory,
@@ -19,7 +21,7 @@ describe('TransactionService.createTransaction', () => {
         description: 'Test transaction',
         type: 'income',
         date: new Date(),
-      },
+      } as CreateTransactionInput,
       user.id
     )
 
@@ -37,8 +39,9 @@ describe('TransactionService.getTransactions', () => {
     const user = await createUserFactory()
 
     const service = new TransactionService()
-    const transaction1 = await createTransactionFactory(user.id)
-    const transaction2 = await createTransactionFactory(user.id)
+    const { id: categoryId } = await createCategoryFactory(user.id)
+    const transaction1 = await createTransactionFactory(user.id, categoryId)
+    const transaction2 = await createTransactionFactory(user.id, categoryId)
 
     const transactions = await service.getTransactions(user.id)
 
@@ -55,6 +58,7 @@ describe('TransactionService.getTransactionSummary', () => {
   it('should return balance, income and expense for the user', async () => {
     const user = await createUserFactory()
     const anotherUser = await createUserFactory()
+    const { id: categoryId } = await createCategoryFactory(user.id)
 
     await createManyTransactionsFactory([
       {
@@ -63,6 +67,7 @@ describe('TransactionService.getTransactionSummary', () => {
         type: 'income',
         date: new Date(),
         userId: user.id,
+        categoryId,
       },
       {
         amount: 50,
@@ -70,6 +75,7 @@ describe('TransactionService.getTransactionSummary', () => {
         type: 'income',
         date: new Date(),
         userId: user.id,
+        categoryId,
       },
       {
         amount: 80,
@@ -77,6 +83,7 @@ describe('TransactionService.getTransactionSummary', () => {
         type: 'expense',
         date: new Date(),
         userId: user.id,
+        categoryId,
       },
       {
         amount: 500,
@@ -84,6 +91,7 @@ describe('TransactionService.getTransactionSummary', () => {
         type: 'income',
         date: new Date(),
         userId: anotherUser.id,
+        categoryId,
       },
     ])
 
@@ -115,7 +123,9 @@ describe('TransactionService.getTransactionSummary', () => {
 describe('TransactionService.updateTransaction', () => {
   it('should update a transaction', async () => {
     const user = await createUserFactory()
-    const transaction = await createTransactionFactory(user.id)
+    const { id: categoryId } = await createCategoryFactory(user.id)
+
+    const transaction = await createTransactionFactory(user.id, categoryId)
 
     const service = new TransactionService()
 
@@ -159,7 +169,8 @@ describe('TransactionService.updateTransaction', () => {
   it('should throw when transaction belongs to another user', async () => {
     const owner = await createUserFactory()
     const anotherUser = await createUserFactory()
-    const transaction = await createTransactionFactory(owner.id)
+    const { id: categoryId } = await createCategoryFactory(owner.id)
+    const transaction = await createTransactionFactory(owner.id, categoryId)
     const service = new TransactionService()
 
     await expect(
@@ -180,7 +191,8 @@ describe('TransactionService.updateTransaction', () => {
 describe('TransactionService.deleteTransaction', () => {
   it('should delete a transaction', async () => {
     const user = await createUserFactory()
-    const transaction = await createTransactionFactory(user.id)
+    const { id: categoryId } = await createCategoryFactory(user.id)
+    const transaction = await createTransactionFactory(user.id, categoryId)
 
     const service = new TransactionService()
 
@@ -205,7 +217,8 @@ describe('TransactionService.deleteTransaction', () => {
   it('should throw when transaction belongs to another user', async () => {
     const owner = await createUserFactory()
     const anotherUser = await createUserFactory()
-    const transaction = await createTransactionFactory(owner.id)
+    const { id: categoryId } = await createCategoryFactory(owner.id)
+    const transaction = await createTransactionFactory(owner.id, categoryId)
     const service = new TransactionService()
 
     await expect(

@@ -8,10 +8,15 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql'
+import { ZodError } from 'zod'
 import {
   CreateCategoryInput,
   UpdateCategoryInput,
 } from '@/dtos/input/category.input'
+import {
+  CreateCategoryInputSchema,
+  UpdateCategoryInputSchema,
+} from '@/dtos/input/category.input.schema'
 import type { GraphQLContext } from '@/graphql/context'
 import { authMiddleware } from '@/middlewares/auth.middleware'
 import { CategoryModel } from '@/models/category.model'
@@ -46,8 +51,17 @@ export class CategoryResolver {
     @Ctx() context: GraphQLContext
   ): Promise<CategoryModel> {
     if (!context.userId) throw new Error('Unauthorized')
-
-    return this.categoryService.createCategory(data, context.userId)
+    try {
+      const validated = CreateCategoryInputSchema.parse(data)
+      return this.categoryService.createCategory(validated, context.userId)
+    } catch (err) {
+      if (err instanceof ZodError) {
+        throw new Error(
+          `Validation error: ${err.issues.map(e => e.message).join(', ')}`
+        )
+      }
+      throw err
+    }
   }
 
   @Query(() => [CategoryModel])
@@ -65,8 +79,17 @@ export class CategoryResolver {
     @Ctx() context: GraphQLContext
   ): Promise<CategoryModel> {
     if (!context.userId) throw new Error('Unauthorized')
-
-    return this.categoryService.updateCategory(data, context.userId)
+    try {
+      const validated = UpdateCategoryInputSchema.parse(data)
+      return this.categoryService.updateCategory(validated, context.userId)
+    } catch (err) {
+      if (err instanceof ZodError) {
+        throw new Error(
+          `Validation error: ${err.issues.map(e => e.message).join(', ')}`
+        )
+      }
+      throw err
+    }
   }
 
   @Mutation(() => Boolean)

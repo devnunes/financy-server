@@ -33,10 +33,10 @@ export class TransactionService {
     })
 
     const income =
-      groupedTransactions.find((transaction) => transaction.type === 'income')
+      groupedTransactions.find(transaction => transaction.type === 'income')
         ?._sum.amount ?? 0
     const expense =
-      groupedTransactions.find((transaction) => transaction.type === 'expense')
+      groupedTransactions.find(transaction => transaction.type === 'expense')
         ?._sum.amount ?? 0
 
     return {
