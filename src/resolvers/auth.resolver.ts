@@ -3,11 +3,7 @@ import { SignInInput, SignUpInput } from '@/dtos/input/auth.input'
 import { SignInOutput, SignUpOutput } from '@/dtos/output/auth.output'
 import type { GraphQLContext } from '@/graphql/context'
 import { AuthService } from '@/services/auth.service'
-import {
-  clearSessionCookie,
-  cookieUtils,
-  setSessionCookie,
-} from '@/utils/cookie'
+import { cookieUtils } from '@/utils/cookie'
 import { isLeft } from '@/utils/either'
 import { jwtUtils } from '@/utils/jwt'
 
@@ -28,8 +24,19 @@ export class AuthResolver {
   ): Promise<SignUpOutput> {
     const result = await this.authService.signUp(data)
     if (isLeft(result)) throw result.left
+    const userId = result.right.user.id
+    const accessToken = jwtUtils.signAccessToken(userId)
+    const refreshToken = jwtUtils.signRefreshToken(userId)
 
-    setSessionCookie(context.reply, result.right.token)
+    cookieUtils.setHttpOnlyCookie(context.reply, 'accessToken', accessToken, {
+      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      path: '/',
+    })
+
+    cookieUtils.setHttpOnlyCookie(context.reply, 'refreshToken', refreshToken, {
+      maxAge: 14 * 24 * 60 * 60, // 14 days in seconds
+      path: '/graphql',
+    })
 
     return result.right
   }
@@ -67,7 +74,10 @@ export class AuthResolver {
 
   @Mutation(() => Boolean)
   async signOut(@Ctx() context: GraphQLContext): Promise<boolean> {
-    clearSessionCookie(context.reply)
+    cookieUtils.clearCookie(context.reply, 'accessToken')
+    cookieUtils.clearCookie(context.reply, 'refreshToken', {
+      path: '/graphql',
+    })
     return true
   }
 
@@ -87,10 +97,15 @@ export class AuthResolver {
 
     const newAccessToken = jwtUtils.signAccessToken(decodedResult.right.userId)
 
-    cookieUtils.setHttpOnlyCookie(context.reply, 'accessToken', newAccessToken, {
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: '/',
-    })
+    cookieUtils.setHttpOnlyCookie(
+      context.reply,
+      'accessToken',
+      newAccessToken,
+      {
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+        path: '/',
+      }
+    )
 
     return true
   }

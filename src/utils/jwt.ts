@@ -2,11 +2,6 @@ import jwt from 'jsonwebtoken'
 import { env } from '@/env'
 import { type Either, isLeft, isRight, makeLeft, makeRight } from './either'
 
-export type JwtPayload = {
-  id: string
-  email: string
-  type: 'access' | 'refresh'
-}
 export type TokenPayload = {
   userId: string
   email: string
@@ -39,7 +34,9 @@ export const jwtUtils = {
       expiresIn: '7d',
     })
   },
-  verifyTokenEither: (token: string): Either<JwtVerificationError, TokenPayload> => {
+  verifyTokenEither: (
+    token: string
+  ): Either<JwtVerificationError, TokenPayload> => {
     const accessResult = verifyWithSecret(token, env.JWT_SECRET)
     if (isRight(accessResult)) return accessResult
 

@@ -83,9 +83,23 @@ describe('AuthResolver.signUp', () => {
     const result = await resolver.signUp(input, context)
 
     expect(signUp).toHaveBeenCalledWith(input)
-    expect(context.reply.header).toHaveBeenCalledWith(
-      'Set-Cookie',
-      expect.stringContaining('session_token=')
+    expect(context.reply.setCookie).toHaveBeenCalledWith(
+      'accessToken',
+      expect.any(String),
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+      })
+    )
+    expect(context.reply.setCookie).toHaveBeenCalledWith(
+      'refreshToken',
+      expect.any(String),
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/graphql',
+      })
     )
     expect(result).toMatchObject({
       token: expect.any(String),
@@ -136,9 +150,21 @@ describe('AuthResolver.signUp', () => {
     const result = await resolver.signUp(input, context)
 
     expect(signUpSpy).toHaveBeenCalledWith(input)
-    expect(context.reply.header).toHaveBeenCalledWith(
-      'Set-Cookie',
-      expect.stringContaining('session_token=')
+    expect(context.reply.setCookie).toHaveBeenCalledWith(
+      'accessToken',
+      expect.any(String),
+      expect.objectContaining({
+        httpOnly: true,
+        path: '/',
+      })
+    )
+    expect(context.reply.setCookie).toHaveBeenCalledWith(
+      'refreshToken',
+      expect.any(String),
+      expect.objectContaining({
+        httpOnly: true,
+        path: '/graphql',
+      })
     )
     expect(result.user.email).toBe(input.email)
   })
@@ -264,13 +290,13 @@ describe('AuthResolver.signOut', () => {
     const result = await resolver.signOut(context)
 
     expect(result).toBe(true)
-    expect(context.reply.header).toHaveBeenCalledWith(
-      'Set-Cookie',
-      expect.stringContaining('session_token=')
+    expect(context.reply.clearCookie).toHaveBeenCalledWith(
+      'accessToken',
+      expect.objectContaining({ path: '/' })
     )
-    expect(context.reply.header).toHaveBeenCalledWith(
-      'Set-Cookie',
-      expect.stringContaining('Max-Age=0')
+    expect(context.reply.clearCookie).toHaveBeenCalledWith(
+      'refreshToken',
+      expect.objectContaining({ path: '/graphql' })
     )
   })
 })
