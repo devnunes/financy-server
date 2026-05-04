@@ -32,7 +32,10 @@ type TransactionResolverDeps = {
     | 'deleteTransaction'
   >
   userService?: Pick<UserService, 'getUserById'>
-  categoryService?: Pick<CategoryService, 'getCategoryById'>
+  categoryService?: Pick<
+    CategoryService,
+    'getCategoryById' | 'categoryBelongsToUser'
+  >
 }
 
 @Resolver(() => TransactionModel)
@@ -47,7 +50,10 @@ export class TransactionResolver {
     | 'deleteTransaction'
   >
   private userService: Pick<UserService, 'getUserById'>
-  private categoryService: Pick<CategoryService, 'getCategoryById'>
+  private categoryService: Pick<
+    CategoryService,
+    'getCategoryById' | 'categoryBelongsToUser'
+  >
 
   constructor(deps?: TransactionResolverDeps) {
     this.transactionService =
@@ -62,6 +68,12 @@ export class TransactionResolver {
     @Ctx() context: GraphQLContext
   ): Promise<TransactionModel> {
     if (!context.userId) throw new Error('Unauthorized')
+    const categoryBelongsToUser =
+      await this.categoryService.categoryBelongsToUser(
+        data.categoryId,
+        context.userId
+      )
+    if (!categoryBelongsToUser) throw new Error('Unauthorized')
 
     return this.transactionService.createTransaction(data, context.userId)
   }
@@ -90,6 +102,15 @@ export class TransactionResolver {
     @Ctx() context: GraphQLContext
   ): Promise<TransactionModel> {
     if (!context.userId) throw new Error('Unauthorized')
+
+    if (data.categoryId) {
+      const categoryBelongsToUser =
+        await this.categoryService.categoryBelongsToUser(
+          data.categoryId,
+          context.userId
+        )
+      if (!categoryBelongsToUser) throw new Error('Unauthorized')
+    }
 
     return this.transactionService.updateTransaction(data, context.userId)
   }

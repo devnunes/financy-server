@@ -26,12 +26,11 @@ export class CategoryService {
 
     return categories
   }
-  
+
   async getCategoryById(id: string): Promise<CategoryModel | null> {
     return await prismaClient.category.findUnique({
       where: { id },
     })
-
   }
 
   async updateCategory(
@@ -64,5 +63,17 @@ export class CategoryService {
     })
 
     return true
+  }
+
+  async categoryBelongsToUser(
+    categoryId: string,
+    userId: string
+  ): Promise<boolean> {
+    const category = await prismaClient.category.findUnique({
+      where: { id: categoryId },
+    })
+
+    if (!category) return false
+    return category.userId === userId
   }
 }
