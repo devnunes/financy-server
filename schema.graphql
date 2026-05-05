@@ -5,6 +5,7 @@
 
 type CategoriesAggregatedModel {
   color: String!
+  icon: String!
   id: ID!
   title: String!
   totalAmount: Int!
@@ -14,6 +15,7 @@ type CategoriesAggregatedModel {
 type CategoriesSummaryModel {
   categories: [CategoriesAggregatedModel!]!
   categoryCount: Int!
+  mostUsedCategory: CategoriesAggregatedModel!
   transactionCountByUser: Int!
 }
 

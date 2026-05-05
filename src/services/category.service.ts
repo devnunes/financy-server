@@ -93,9 +93,10 @@ export class CategoryService {
         id: true,
         title: true,
         color: true,
+        icon: true,
       },
     })
-    const transactionCountByUser = await prismaClient.category.aggregate({
+    const transactionCountByUser = await prismaClient.transaction.aggregate({
       where: { userId },
       _count: { id: true },
     })
@@ -119,8 +120,12 @@ export class CategoryService {
     return {
       transactionCountByUser: transactionCountByUser._count.id,
       categoryCount: categories.length,
+      mostUsedCategory: categoriesAggregated.reduce((prev, current) =>
+        prev.transactionCountByCategory > current.transactionCountByCategory
+          ? prev
+          : current
+      ),
       categories: categoriesAggregated,
     }
-    // return results
   }
 }

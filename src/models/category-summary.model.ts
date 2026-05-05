@@ -9,6 +9,9 @@ export class CategoriesSummaryModel {
 
   @Field(() => Int)
   categoryCount!: number
+
+  @Field(() => CategoriesAggregatedModel)
+  mostUsedCategory!: CategoriesAggregatedModel
 }
 
 @ObjectType()
@@ -21,6 +24,9 @@ export class CategoriesAggregatedModel {
 
   @Field(() => String)
   color!: string
+
+  @Field(() => String)
+  icon!: string
 
   @Field(() => Int)
   totalAmount!: number

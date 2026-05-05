@@ -18,7 +18,7 @@ export class TransactionService {
     const transaction = await prismaClient.transaction.findUnique({
       where: { id: transactionId, userId },
     })
-
+    ;('')
     if (!transaction) throw new Error('Transaction not found')
 
     return transaction
