@@ -117,10 +117,10 @@ export class CategoryResolver {
     return this.categoryService.deleteCategory(id, context.currentUserId)
   }
 
-  @Query(() => [CategoriesSummaryModel])
+  @Query(() => CategoriesSummaryModel)
   async getCategoriesSummary(
     @Ctx() context: GraphQLContext
-  ): Promise<CategoriesSummaryModel[]> {
+  ): Promise<CategoriesSummaryModel> {
     if (!context.currentUserId) throw new Error('Unauthorized')
 
     return this.categoryService.getCategoriesSummary(context.currentUserId)

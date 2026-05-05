@@ -101,6 +101,7 @@ describe('TransactionResolver.createTransaction', () => {
       transactionService: {
         createTransaction,
         getTransactions: vi.fn(),
+        getOneTransaction: vi.fn(),
         getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
@@ -169,6 +170,7 @@ describe('TransactionResolver.getTransactions', () => {
         getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
+        getOneTransaction: vi.fn(),
       },
     })
 
@@ -206,6 +208,7 @@ describe('TransactionResolver.getTransactionSummary', () => {
       transactionService: {
         createTransaction: vi.fn(),
         getTransactions: vi.fn(),
+        getOneTransaction: vi.fn(),
         getTransactionSummary,
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
@@ -252,6 +255,7 @@ describe('TransactionResolver.updateTransaction', () => {
         getTransactionSummary: vi.fn(),
         updateTransaction,
         deleteTransaction: vi.fn(),
+        getOneTransaction: vi.fn(),
       },
       categoryService: {
         getCategoryById: vi.fn(),
@@ -295,6 +299,7 @@ describe('TransactionResolver.deleteTransaction', () => {
       transactionService: {
         createTransaction: vi.fn(),
         getTransactions: vi.fn(),
+        getOneTransaction: vi.fn(),
         getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction,
@@ -344,6 +349,7 @@ describe('TransactionResolver.user', () => {
         getTransactionSummary: vi.fn(),
         updateTransaction: vi.fn(),
         deleteTransaction: vi.fn(),
+        getOneTransaction: vi.fn(),
       },
     })
 

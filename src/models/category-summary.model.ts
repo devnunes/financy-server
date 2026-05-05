@@ -1,14 +1,18 @@
-import { Field, GraphQLISODateTime, ID, Int, ObjectType } from 'type-graphql'
-import { UserModel } from './user.model'
-
+import { Field, ID, Int, ObjectType } from 'type-graphql'
 @ObjectType()
-export class CategoryTransactionAmount {
+export class CategoriesSummaryModel {
+  @Field(() => [CategoriesAggregatedModel])
+  categories!: CategoriesAggregatedModel[]
+
   @Field(() => Int)
-  amount!: number
+  transactionCountByUser!: number
+
+  @Field(() => Int)
+  categoryCount!: number
 }
 
 @ObjectType()
-export class CategoriesSummaryModel {
+export class CategoriesAggregatedModel {
   @Field(() => ID)
   id!: string
 
@@ -16,32 +20,11 @@ export class CategoriesSummaryModel {
   title!: string
 
   @Field(() => String)
-  description!: string
-
-  @Field(() => String)
-  icon!: string
-
-  @Field(() => String)
   color!: string
-
-  @Field(() => String)
-  userId!: string
-
-  @Field(() => GraphQLISODateTime)
-  createdAt!: Date
-
-  @Field(() => GraphQLISODateTime)
-  updatedAt!: Date
-
-  @Field(() => UserModel, { nullable: true })
-  user?: UserModel
-
-  @Field(() => [CategoryTransactionAmount], { nullable: true })
-  transactions?: CategoryTransactionAmount[]
 
   @Field(() => Int)
   totalAmount!: number
 
   @Field(() => Int)
-  transactionCount!: number
+  transactionCountByCategory!: number
 }

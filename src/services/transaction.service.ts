@@ -14,6 +14,16 @@ export class TransactionService {
     })
   }
 
+  async getOneTransaction(transactionId: string, userId: string) {
+    const transaction = await prismaClient.transaction.findUnique({
+      where: { id: transactionId, userId },
+    })
+
+    if (!transaction) throw new Error('Transaction not found')
+
+    return transaction
+  }
+
   async getTransactions(userId: string) {
     const transactions = await prismaClient.transaction.findMany({
       where: { userId },

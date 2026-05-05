@@ -19,6 +19,12 @@ export class CreateTransactionInput {
 }
 
 @InputType()
+export class GetOneTransactionInput {
+  @Field(() => ID)
+  id!: string
+}
+
+@InputType()
 export class UpdateTransactionInput {
   @Field(() => ID)
   id!: string

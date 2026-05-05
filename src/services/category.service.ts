@@ -86,36 +86,41 @@ export class CategoryService {
     return category.userId === userId
   }
 
-  async getCategoriesSummary(
-    userId: string
-  ): Promise<CategoriesSummaryModel[]> {
-    const categoriesSummary = await prismaClient.category.findMany({
+  async getCategoriesSummary(userId: string): Promise<CategoriesSummaryModel> {
+    const categories = await prismaClient.category.findMany({
       where: { userId },
-      include: {
-        transactions: {
-          select: {
-            amount: true,
-          },
-        },
-        _count: {
-          select: { transactions: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        color: true,
       },
     })
+    const transactionCountByUser = await prismaClient.category.aggregate({
+      where: { userId },
+      _count: { id: true },
+    })
 
-    const results = await Promise.all(
-      categoriesSummary.map(async category => {
-        const sumResult = await prismaClient.transaction.aggregate({
+    const categoriesAggregated = await Promise.all(
+      categories.map(async category => {
+        const result = await prismaClient.transaction.aggregate({
           where: { categoryId: category.id },
           _sum: { amount: true },
+          _count: { id: true },
         })
+
         return {
           ...category,
-          transactionCount: category._count.transactions,
-          totalAmount: sumResult._sum.amount || 0,
+          transactionCountByCategory: result._count.id,
+          totalAmount: result._sum.amount || 0,
         }
       })
     )
-    return results
+
+    return {
+      transactionCountByUser: transactionCountByUser._count.id,
+      categoryCount: categories.length,
+      categories: categoriesAggregated,
+    }
+    // return results
   }
 }

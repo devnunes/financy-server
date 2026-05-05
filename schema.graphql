@@ -3,19 +3,18 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
-type CategoriesSummaryModel {
+type CategoriesAggregatedModel {
   color: String!
-  createdAt: DateTimeISO!
-  description: String!
-  icon: String!
   id: ID!
   title: String!
   totalAmount: Int!
-  transactionCount: Int!
-  transactions: [CategoryTransactionAmount!]
-  updatedAt: DateTimeISO!
-  user: UserModel
-  userId: String!
+  transactionCountByCategory: Int!
+}
+
+type CategoriesSummaryModel {
+  categories: [CategoriesAggregatedModel!]!
+  categoryCount: Int!
+  transactionCountByUser: Int!
 }
 
 type CategoryModel {
@@ -30,10 +29,6 @@ type CategoryModel {
   updatedAt: DateTimeISO!
   user: UserModel
   userId: String!
-}
-
-type CategoryTransactionAmount {
-  amount: Int!
 }
 
 input CreateCategoryInput {
@@ -56,6 +51,10 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTimeISO
 
+input GetOneTransactionInput {
+  id: ID!
+}
+
 type Mutation {
   createCategory(data: CreateCategoryInput!): CategoryModel!
   createTransaction(data: CreateTransactionInput!): TransactionModel!
@@ -72,7 +71,8 @@ type Mutation {
 
 type Query {
   getCategories: [CategoryModel!]!
-  getCategoriesSummary: [CategoriesSummaryModel!]!
+  getCategoriesSummary: CategoriesSummaryModel!
+  getOneTransaction(data: GetOneTransactionInput!): TransactionModel!
   getTransactionSummary: TransactionSummaryModel!
   getTransactions: [TransactionModel!]!
   getUser(id: String!): UserModel!

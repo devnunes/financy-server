@@ -10,6 +10,7 @@ import {
 } from 'type-graphql'
 import {
   CreateTransactionInput,
+  GetOneTransactionInput,
   UpdateTransactionInput,
 } from '@/dtos/input/transaction.input'
 import type { GraphQLContext } from '@/graphql/context'
@@ -27,6 +28,7 @@ type TransactionResolverDeps = {
     TransactionService,
     | 'createTransaction'
     | 'getTransactions'
+    | 'getOneTransaction'
     | 'getTransactionSummary'
     | 'updateTransaction'
     | 'deleteTransaction'
@@ -45,6 +47,7 @@ export class TransactionResolver {
     TransactionService,
     | 'createTransaction'
     | 'getTransactions'
+    | 'getOneTransaction'
     | 'getTransactionSummary'
     | 'updateTransaction'
     | 'deleteTransaction'
@@ -88,6 +91,19 @@ export class TransactionResolver {
     if (!context.currentUserId) throw new Error('Unauthorized')
 
     return this.transactionService.getTransactions(context.currentUserId)
+  }
+
+  @Query(() => TransactionModel)
+  async getOneTransaction(
+    @Arg('data', () => GetOneTransactionInput) data: GetOneTransactionInput,
+    @Ctx() context: GraphQLContext
+  ): Promise<TransactionModel> {
+    if (!context.currentUserId) throw new Error('Unauthorized')
+
+    return this.transactionService.getOneTransaction(
+      data.id,
+      context.currentUserId
+    )
   }
 
   @Query(() => TransactionSummaryModel)
