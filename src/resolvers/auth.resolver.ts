@@ -5,7 +5,6 @@ import {
   type AuthOutputWithoutPassword,
 } from '@/dtos/output/auth.output'
 import type { GraphQLContext } from '@/graphql/context'
-import type { UserModel } from '@/models/user.model'
 import { AuthService } from '@/services/auth.service'
 import { UserService } from '@/services/user.service'
 import { cookieUtils } from '@/utils/cookie'
@@ -23,7 +22,7 @@ export class AuthResolver {
   async signUp(
     @Arg('data', () => AuthInput) data: AuthInput,
     @Ctx() context: GraphQLContext
-  ): Promise<UserModel> {
+  ): Promise<AuthOutputWithoutPassword> {
     const validUser = await this.authService.getValidUser(data)
     if (isRight(validUser)) throw new Error('User already exists')
 
@@ -48,7 +47,11 @@ export class AuthResolver {
       path: '/graphql',
     })
 
-    return user
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    }
   }
 
   @Mutation(() => AuthOutput)
