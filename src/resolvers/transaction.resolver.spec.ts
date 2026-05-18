@@ -128,7 +128,10 @@ describe('TransactionResolver.getTransactions', () => {
     )
 
     const result = await resolver.transactions({}, context)
-  expect(getTransactions).toHaveBeenCalledWith(context.currentUserId, undefined)
+    expect(getTransactions).toHaveBeenCalledWith(
+      context.currentUserId,
+      undefined
+    )
     expect(result).toEqual(transactions)
   })
 
