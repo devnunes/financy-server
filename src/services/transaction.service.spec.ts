@@ -44,13 +44,21 @@ describe('TransactionService.getTransactions', () => {
     const { id: categoryId } = await createCategoryFactory(user.id)
     const transaction1 = await createTransactionFactory(user.id, categoryId)
     const transaction2 = await createTransactionFactory(user.id, categoryId)
+    const parsedTransaction1 = {
+      ...transaction1,
+      amount: Number((transaction1.amount / 100).toFixed(2)),
+    }
+    const parsedTransaction2 = {
+      ...transaction2,
+      amount: Number((transaction2.amount / 100).toFixed(2)),
+    }
 
     const transactions = await service.getTransactions(user.id)
 
     expect(transactions).toEqual(
       expect.arrayContaining([
-        expect.objectContaining(transaction1),
-        expect.objectContaining(transaction2),
+        expect.objectContaining(parsedTransaction2),
+        expect.objectContaining(parsedTransaction1),
       ])
     )
   })
