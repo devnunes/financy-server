@@ -3,20 +3,32 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+input AuthInput {
+  email: String!
+  name: String
+  password: String!
+}
+
+type AuthOutput {
+  email: String!
+  id: ID!
+  name: String!
+}
+
 type CategoriesAggregatedModel {
   color: String!
   icon: String!
   id: ID!
   title: String!
-  totalAmount: Int!
+  totalAmount: Float!
   transactionCountByCategory: Int!
 }
 
 type CategoriesSummaryModel {
   categories: [CategoriesAggregatedModel!]!
-  categoryCount: Int!
+  categoryCount: Float!
   mostUsedCategory: CategoriesAggregatedModel!
-  transactionCountByUser: Int!
+  transactionCountByUser: Float!
 }
 
 type CategoryModel {
@@ -63,43 +75,23 @@ type Mutation {
   deleteCategory(id: String!): Boolean!
   deleteTransaction(id: String!): Boolean!
   refreshToken: Boolean!
-  signIn(data: SignInInput!): SignInOutput!
+  signIn(data: AuthInput!): AuthOutput!
   signOut: Boolean!
-  signUp(data: SignUpInput!): SignUpOutput!
+  signUp(data: AuthInput!): AuthOutput!
   updateCategory(data: UpdateCategoryInput!): CategoryModel!
   updateTransaction(data: UpdateTransactionInput!): TransactionModel!
   updateUser(data: UpdateUserInput!): Boolean!
 }
 
 type Query {
-  getCategories: [CategoryModel!]!
-  getCategoriesSummary: CategoriesSummaryModel!
-  getOneTransaction(data: GetOneTransactionInput!): TransactionModel!
-  getTransactionSummary: TransactionSummaryModel!
-  getTransactions: [TransactionModel!]!
-  getUser(id: String!): UserModel!
+  categories: [CategoryModel!]!
+  categoriesSummary: CategoriesSummaryModel!
   me: UserModel!
-}
-
-input SignInInput {
-  email: String!
-  password: String!
-}
-
-type SignInOutput {
-  user: UserModel!
-}
-
-input SignUpInput {
-  email: String!
-  name: String!
-  password: String!
-}
-
-type SignUpOutput {
-  refreshToken: String!
-  token: String!
-  user: UserModel!
+  transaction(data: GetOneTransactionInput!): TransactionModel!
+  transactionSummary: TransactionSummaryModel!
+  transactions: [TransactionModel!]!
+  user(id: String!): UserModel!
+  userBalance: UserBalanceModel!
 }
 
 type TransactionModel {
@@ -145,6 +137,12 @@ input UpdateUserInput {
   id: String!
   name: String
   password: String
+}
+
+type UserBalanceModel {
+  balance: Float!
+  expenses: Float!
+  income: Float!
 }
 
 type UserModel {

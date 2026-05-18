@@ -1,13 +1,13 @@
-import { Field, ID, Int, ObjectType } from 'type-graphql'
+import { Field, Float, ID, Int, ObjectType } from 'type-graphql'
 @ObjectType()
 export class CategoriesSummaryModel {
   @Field(() => [CategoriesAggregatedModel])
   categories!: CategoriesAggregatedModel[]
 
-  @Field(() => Int)
+  @Field(() => Float)
   transactionCountByUser!: number
 
-  @Field(() => Int)
+  @Field(() => Float)
   categoryCount!: number
 
   @Field(() => CategoriesAggregatedModel)
@@ -28,7 +28,7 @@ export class CategoriesAggregatedModel {
   @Field(() => String)
   icon!: string
 
-  @Field(() => Int)
+  @Field(() => Float)
   totalAmount!: number
 
   @Field(() => Int)

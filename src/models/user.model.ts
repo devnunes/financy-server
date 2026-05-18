@@ -1,4 +1,4 @@
-import { Field, GraphQLISODateTime, ID, ObjectType } from 'type-graphql'
+import { Field, Float, GraphQLISODateTime, ID, ObjectType } from 'type-graphql'
 
 @ObjectType()
 export class UserModel {
@@ -16,4 +16,16 @@ export class UserModel {
 
   @Field(() => GraphQLISODateTime)
   updatedAt!: Date
+}
+
+@ObjectType()
+export class UserBalanceModel {
+  @Field(() => Float)
+  balance!: number
+
+  @Field(() => Float)
+  income!: number
+
+  @Field(() => Float)
+  expenses!: number
 }

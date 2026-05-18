@@ -1,116 +1,52 @@
 import { faker } from '@faker-js/faker'
 import { describe, expect, it, vi } from 'vitest'
-import type {
-  CreateTransactionInput,
-  UpdateTransactionInput,
-} from '@/dtos/input/transaction.input'
+
 import type { GraphQLContext } from '@/graphql/context'
-import { TransactionService } from '@/services/transaction.service'
+import {
+  createMockContext,
+  globalMockCategoryService,
+  globalMockTransactionService,
+  globalMockUserService,
+} from '@/test/utils'
 import { TransactionResolver } from './transaction.resolver'
-
-type createSetup = {
-  input: CreateTransactionInput
-  context: GraphQLContext
-}
-
-type getSetup = {
-  input: { currentUserId: string }
-  context: GraphQLContext
-}
-
-type updateSetup = {
-  input: UpdateTransactionInput
-  context: GraphQLContext
-}
-
-type deleteSetup = {
-  input: { id: string }
-  context: GraphQLContext
-}
-
-function makeResolverSetup(
-  method: 'create' | 'update' | 'delete' | 'get',
-  overrides?: Partial<createSetup | updateSetup | deleteSetup | getSetup>
-): createSetup | updateSetup | deleteSetup | getSetup {
-  const context = {
-    currentUserId: faker.string.uuid(),
-    ...overrides?.context,
-  } as GraphQLContext
-
-  if (method === 'get') {
-    return {
-      input: {
-        currentUserId: faker.string.uuid(),
-        ...(overrides?.input as Partial<getSetup['input']>),
-      },
-      context,
-    }
-  }
-
-  if (method === 'delete') {
-    return {
-      input: {
-        id: faker.string.uuid(),
-        ...(overrides?.input as Partial<deleteSetup['input']>),
-      },
-      context,
-    }
-  }
-
-  const baseInput = {
-    amount: faker.number.int({ min: 1, max: 1000 }),
-    description: faker.lorem.sentence(),
-    type: faker.helpers.arrayElement(['income', 'expense']),
-    categoryId: faker.string.uuid(),
-    date: faker.date.recent(),
-  }
-
-  if (method === 'update') {
-    return {
-      input: {
-        ...baseInput,
-        id: faker.string.uuid(),
-        ...(overrides?.input as Partial<updateSetup['input']>),
-      },
-      context,
-    }
-  }
-
-  return {
-    input: {
-      ...baseInput,
-      ...(overrides?.input as Partial<createSetup['input']>),
-    },
-    context,
-  }
-}
 
 describe('TransactionResolver.createTransaction', () => {
   it('should delegate creation to TransactionService', async () => {
-    const { input, context } = makeResolverSetup('create') as createSetup
+    const input = {
+      amount: faker.number.int({ min: 1, max: 1000 }),
+      description: faker.lorem.sentence(),
+      type: faker.helpers.arrayElement(['income', 'expense']),
+      categoryId: faker.string.uuid(),
+      date: faker.date.recent(),
+    }
+    const context = createMockContext()
+    const createTransaction = vi
+      .fn()
+      .mockImplementation((inputArg, userIdArg) => ({
+        id: 'transaction-id',
+        amount: inputArg.amount,
+        description: inputArg.description,
+        type: inputArg.type,
+        currentUserId: userIdArg,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }))
 
-    const createTransaction = vi.fn().mockResolvedValue({
-      id: 'transaction-id',
-      ...input,
-      currentUserId: context.currentUserId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
+    const transactionService = {
+      ...globalMockTransactionService,
+      createTransaction,
+    }
 
-    const resolver = new TransactionResolver({
-      transactionService: {
-        createTransaction,
-        getTransactions: vi.fn(),
-        getOneTransaction: vi.fn(),
-        getTransactionSummary: vi.fn(),
-        updateTransaction: vi.fn(),
-        deleteTransaction: vi.fn(),
-      },
-      categoryService: {
-        getCategoryById: vi.fn(),
-        categoryBelongsToUser: vi.fn().mockResolvedValue(true),
-      },
-    })
+    const categoryService = {
+      ...globalMockCategoryService,
+      categoryBelongsToUser: vi.fn().mockResolvedValue(true),
+    }
+
+    const resolver = new TransactionResolver(
+      transactionService,
+      globalMockUserService,
+      categoryService
+    )
 
     const result = await resolver.createTransaction(input, context)
 
@@ -125,16 +61,28 @@ describe('TransactionResolver.createTransaction', () => {
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const transactionService = new TransactionService()
-    const resolver = new TransactionResolver({
+    const transactionService = {
+      ...globalMockTransactionService,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
       transactionService,
-    })
-    const { input, context } = makeResolverSetup('create', {
-      context: {
-        currentUserId: undefined,
-      } as GraphQLContext,
-    }) as createSetup
-
+      userService,
+      categoryService
+    )
+    const input = {
+      amount: faker.number.int({ min: 1, max: 1000 }),
+      description: faker.lorem.sentence(),
+      type: faker.helpers.arrayElement(['income', 'expense']),
+      categoryId: faker.string.uuid(),
+      date: faker.date.recent(),
+    }
+    const context = createMockContext({ currentUserId: undefined })
     await expect(resolver.createTransaction(input, context)).rejects.toThrow(
       'Unauthorized'
     )
@@ -163,32 +111,48 @@ describe('TransactionResolver.getTransactions', () => {
 
     const getTransactions = vi.fn().mockResolvedValue(transactions)
 
-    const resolver = new TransactionResolver({
-      transactionService: {
-        createTransaction: vi.fn(),
-        getTransactions,
-        getTransactionSummary: vi.fn(),
-        updateTransaction: vi.fn(),
-        deleteTransaction: vi.fn(),
-        getOneTransaction: vi.fn(),
-      },
-    })
+    const transactionService = {
+      ...globalMockTransactionService,
+      getTransactions,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
 
-    const result = await resolver.getTransactions(context)
+    const result = await resolver.transactions(context)
 
     expect(getTransactions).toHaveBeenCalledWith(context.currentUserId)
     expect(result).toEqual(transactions)
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new TransactionResolver()
+    const transactionService = {
+      ...globalMockTransactionService,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
     const context = {
       currentUserId: undefined,
     } as GraphQLContext
 
-    await expect(resolver.getTransactions(context)).rejects.toThrow(
-      'Unauthorized'
-    )
+    await expect(resolver.transactions(context)).rejects.toThrow('Unauthorized')
   })
 })
 
@@ -204,18 +168,23 @@ describe('TransactionResolver.getTransactionSummary', () => {
       expense: 80,
     })
 
-    const resolver = new TransactionResolver({
-      transactionService: {
-        createTransaction: vi.fn(),
-        getTransactions: vi.fn(),
-        getOneTransaction: vi.fn(),
-        getTransactionSummary,
-        updateTransaction: vi.fn(),
-        deleteTransaction: vi.fn(),
-      },
-    })
+    const transactionService = {
+      ...globalMockTransactionService,
+      getTransactionSummary,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
 
-    const result = await resolver.getTransactionSummary(context)
+    const result = await resolver.transactionSummary(context)
 
     expect(getTransactionSummary).toHaveBeenCalledWith(context.currentUserId)
     expect(result).toEqual({
@@ -226,12 +195,25 @@ describe('TransactionResolver.getTransactionSummary', () => {
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new TransactionResolver()
+    const transactionService = {
+      ...globalMockTransactionService,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
     const context = {
       currentUserId: undefined,
     } as GraphQLContext
 
-    await expect(resolver.getTransactionSummary(context)).rejects.toThrow(
+    await expect(resolver.transactionSummary(context)).rejects.toThrow(
       'Unauthorized'
     )
   })
@@ -239,7 +221,15 @@ describe('TransactionResolver.getTransactionSummary', () => {
 
 describe('TransactionResolver.updateTransaction', () => {
   it('should delegate update to TransactionService', async () => {
-    const { input, context } = makeResolverSetup('update') as updateSetup
+    const input = {
+      id: faker.string.uuid(),
+      amount: faker.number.int({ min: 1, max: 1000 }),
+      description: faker.lorem.sentence(),
+      type: faker.helpers.arrayElement(['income', 'expense']),
+      category: faker.lorem.word(),
+      date: faker.date.recent(),
+    }
+    const context = createMockContext()
 
     const updateTransaction = vi.fn().mockResolvedValue({
       ...input,
@@ -248,20 +238,21 @@ describe('TransactionResolver.updateTransaction', () => {
       updatedAt: new Date(),
     })
 
-    const resolver = new TransactionResolver({
-      transactionService: {
-        createTransaction: vi.fn(),
-        getTransactions: vi.fn(),
-        getTransactionSummary: vi.fn(),
-        updateTransaction,
-        deleteTransaction: vi.fn(),
-        getOneTransaction: vi.fn(),
-      },
-      categoryService: {
-        getCategoryById: vi.fn(),
-        categoryBelongsToUser: vi.fn().mockResolvedValue(true),
-      },
-    })
+    const transactionService = {
+      ...globalMockTransactionService,
+      updateTransaction,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
 
     const result = await resolver.updateTransaction(input, context)
 
@@ -276,13 +267,29 @@ describe('TransactionResolver.updateTransaction', () => {
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new TransactionResolver()
-    const { input, context } = makeResolverSetup('update', {
-      context: {
-        currentUserId: undefined,
-      } as GraphQLContext,
-    }) as updateSetup
-
+    const transactionService = {
+      ...globalMockTransactionService,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
+    const input = {
+      id: faker.string.uuid(),
+      amount: faker.number.int({ min: 1, max: 1000 }),
+      description: faker.lorem.sentence(),
+      type: faker.helpers.arrayElement(['income', 'expense']),
+      category: faker.lorem.word(),
+      date: faker.date.recent(),
+    }
+    const context = createMockContext({ currentUserId: undefined })
     await expect(resolver.updateTransaction(input, context)).rejects.toThrow(
       'Unauthorized'
     )
@@ -291,24 +298,37 @@ describe('TransactionResolver.updateTransaction', () => {
 
 describe('TransactionResolver.deleteTransaction', () => {
   it('should delegate deletion to TransactionService', async () => {
-    const { input, context } = makeResolverSetup('update') as deleteSetup
+    const input = {
+      id: faker.string.uuid(),
+      amount: faker.number.int({ min: 1, max: 1000 }),
+      description: faker.lorem.sentence(),
+      type: faker.helpers.arrayElement(['income', 'expense']),
+      category: faker.lorem.word(),
+      date: faker.date.recent(),
+    }
+    const context = createMockContext()
 
     const deleteTransaction = vi.fn().mockResolvedValue(true)
 
-    const resolver = new TransactionResolver({
-      transactionService: {
-        createTransaction: vi.fn(),
-        getTransactions: vi.fn(),
-        getOneTransaction: vi.fn(),
-        getTransactionSummary: vi.fn(),
-        updateTransaction: vi.fn(),
-        deleteTransaction,
-      },
-    })
+    const transactionService = {
+      ...globalMockTransactionService,
+      deleteTransaction,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
 
     const result = await resolver.deleteTransaction(input.id, context)
 
-    expect(deleteTransaction).toHaveBeenCalledWith(
+    expect(transactionService.deleteTransaction).toHaveBeenCalledWith(
       input.id,
       context.currentUserId
     )
@@ -316,47 +336,28 @@ describe('TransactionResolver.deleteTransaction', () => {
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new TransactionResolver()
-    const { input, context } = makeResolverSetup('update', {
-      context: {
-        currentUserId: undefined,
-      } as GraphQLContext,
-    }) as deleteSetup
+    const transactionService = {
+      ...globalMockTransactionService,
+    }
+    const categoryService = {
+      ...globalMockCategoryService,
+    }
+    const userService = {
+      ...globalMockUserService,
+    }
+    const resolver = new TransactionResolver(
+      transactionService,
+      userService,
+      categoryService
+    )
+
+    const input = {
+      id: faker.string.uuid(),
+    }
+    const context = createMockContext({ currentUserId: undefined })
 
     await expect(resolver.deleteTransaction(input.id, context)).rejects.toThrow(
       'Unauthorized'
     )
-  })
-})
-
-describe('TransactionResolver.user', () => {
-  it('should resolve user from UserService', async () => {
-    const userId = faker.string.uuid()
-    const getUserById = vi.fn().mockResolvedValue({
-      id: userId,
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-    })
-
-    const resolver = new TransactionResolver({
-      userService: {
-        getUserById,
-      },
-      transactionService: {
-        createTransaction: vi.fn(),
-        getTransactions: vi.fn(),
-        getTransactionSummary: vi.fn(),
-        updateTransaction: vi.fn(),
-        deleteTransaction: vi.fn(),
-        getOneTransaction: vi.fn(),
-      },
-    })
-
-    const result = await resolver.user({ userId } as never)
-
-    expect(getUserById).toHaveBeenCalledWith(userId)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe(userId)
   })
 })

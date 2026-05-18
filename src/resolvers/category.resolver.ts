@@ -24,34 +24,36 @@ import { CategoriesSummaryModel } from '@/models/category-summary.model'
 import { UserModel } from '@/models/user.model'
 import { CategoryService } from '@/services/category.service'
 import { UserService } from '@/services/user.service'
-
-type CategoryResolverDeps = {
-  categoryService?: Pick<
-    CategoryService,
-    | 'createCategory'
-    | 'getCategories'
-    | 'updateCategory'
-    | 'deleteCategory'
-    | 'getCategoriesSummary'
-  >
-  userService?: Pick<UserService, 'getUserById'>
-}
+import { isLeft } from '@/utils/either'
 
 @Resolver(() => CategoryModel)
 @UseMiddleware(authMiddleware)
 export class CategoryResolver {
-  private categoryService: Pick<
-    CategoryService,
-    | 'createCategory'
-    | 'getCategories'
-    | 'updateCategory'
-    | 'deleteCategory'
-    | 'getCategoriesSummary'
-  >
-  private userService: Pick<UserService, 'getUserById'>
-  constructor(deps?: CategoryResolverDeps) {
-    this.categoryService = deps?.categoryService ?? new CategoryService()
-    this.userService = deps?.userService ?? new UserService()
+  constructor(
+    private readonly categoryService: CategoryService = new CategoryService(),
+    private readonly userService: UserService = new UserService()
+  ) {}
+
+  @Query(() => CategoriesSummaryModel)
+  async categoriesSummary(
+    @Ctx() context: GraphQLContext
+  ): Promise<CategoriesSummaryModel> {
+    if (!context.currentUserId) throw new Error('Unauthorized')
+
+    const summary = await this.categoryService.getCategoriesSummary(
+      context.currentUserId
+    )
+    return summary
+  }
+
+  @Query(() => [CategoryModel])
+  async categories(@Ctx() context: GraphQLContext): Promise<CategoryModel[]> {
+    if (!context.currentUserId) throw new Error('Unauthorized')
+
+    const categories = await this.categoryService.getCategories(
+      context.currentUserId
+    )
+    return categories
   }
 
   @Mutation(() => CategoryModel)
@@ -62,10 +64,11 @@ export class CategoryResolver {
     if (!context.currentUserId) throw new Error('Unauthorized')
     try {
       const validated = CreateCategoryInputSchema.parse(data)
-      return this.categoryService.createCategory(
+      const category = await this.categoryService.createCategory(
         validated,
         context.currentUserId
       )
+      return category
     } catch (err) {
       if (err instanceof ZodError) {
         throw new Error(
@@ -76,15 +79,6 @@ export class CategoryResolver {
     }
   }
 
-  @Query(() => [CategoryModel])
-  async getCategories(
-    @Ctx() context: GraphQLContext
-  ): Promise<CategoryModel[]> {
-    if (!context.currentUserId) throw new Error('Unauthorized')
-
-    return this.categoryService.getCategories(context.currentUserId)
-  }
-
   @Mutation(() => CategoryModel)
   async updateCategory(
     @Arg('data', () => UpdateCategoryInput) data: UpdateCategoryInput,
@@ -93,10 +87,11 @@ export class CategoryResolver {
     if (!context.currentUserId) throw new Error('Unauthorized')
     try {
       const validated = UpdateCategoryInputSchema.parse(data)
-      return this.categoryService.updateCategory(
+      const category = await this.categoryService.updateCategory(
         validated,
         context.currentUserId
       )
+      return category
     } catch (err) {
       if (err instanceof ZodError) {
         throw new Error(
@@ -114,20 +109,18 @@ export class CategoryResolver {
   ): Promise<boolean> {
     if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.categoryService.deleteCategory(id, context.currentUserId)
-  }
-
-  @Query(() => CategoriesSummaryModel)
-  async getCategoriesSummary(
-    @Ctx() context: GraphQLContext
-  ): Promise<CategoriesSummaryModel> {
-    if (!context.currentUserId) throw new Error('Unauthorized')
-
-    return this.categoryService.getCategoriesSummary(context.currentUserId)
+    const result = await this.categoryService.deleteCategory(
+      id,
+      context.currentUserId
+    )
+    if (isLeft(result)) throw result.left
+    return result.right
   }
 
   @FieldResolver(() => UserModel, { nullable: true })
   async user(@Root() category: CategoryModel): Promise<UserModel | null> {
-    return this.userService.getUserById(category.userId)
+    const user = await this.userService.getUser({ id: category.userId })
+    if (isLeft(user)) throw user.left
+    return user.right
   }
 }

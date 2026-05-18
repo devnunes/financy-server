@@ -29,8 +29,11 @@ export class TransactionService {
       where: { userId },
       orderBy: { date: 'desc' },
     })
-
-    return transactions
+    const parsedTransactions = transactions.map(transaction => ({
+      ...transaction,
+      amount: Number((transaction.amount / 100).toFixed(2)),
+    }))
+    return parsedTransactions
   }
 
   async getTransactionSummary(userId: string) {

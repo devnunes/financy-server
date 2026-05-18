@@ -3,13 +3,13 @@ import { Field, InputType } from 'type-graphql'
 @InputType()
 export class CreateUserInput {
   @Field(() => String)
-  name!: string
+  name?: string
 
   @Field(() => String)
-  email!: string
+  email?: string
 
   @Field(() => String)
-  password!: string
+  password?: string
 }
 
 @InputType()
@@ -25,4 +25,13 @@ export class UpdateUserInput {
 
   @Field(() => String, { nullable: true })
   password?: string
+}
+
+@InputType()
+export class GetUserInput {
+  @Field(() => String, { nullable: true })
+  id?: string
+
+  @Field(() => String, { nullable: true })
+  email?: string
 }

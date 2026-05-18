@@ -107,7 +107,7 @@ describe('CategoryService.deleteCategory', () => {
 
     const result = await service.deleteCategory(category.id, user.id)
 
-    expect(result).toBe(true)
+    expect(result?.right).toBe(true)
     const deletedCategory = await service.getCategories(user.id)
     expect(deletedCategory).not.toEqual(
       expect.arrayContaining([expect.objectContaining(category)])
@@ -118,9 +118,10 @@ describe('CategoryService.deleteCategory', () => {
     const user = await createUserFactory()
     const service = new CategoryService()
 
-    await expect(
-      service.deleteCategory(faker.string.uuid(), user.id)
-    ).rejects.toThrow('Category not found')
+    const result = await service.deleteCategory(faker.string.uuid(), user.id)
+
+    expect(result?.left).toBeInstanceOf(Error)
+    expect(result?.left?.message).toBe('Category not found')
   })
 
   it('should throw when category belongs to another user', async () => {
@@ -129,8 +130,9 @@ describe('CategoryService.deleteCategory', () => {
     const category = await createCategoryFactory(owner.id)
     const service = new CategoryService()
 
-    await expect(
-      service.deleteCategory(category.id, anotherUser.id)
-    ).rejects.toThrow('Unauthorized')
+    const result = await service.deleteCategory(category.id, anotherUser.id)
+
+    expect(result?.left).toBeInstanceOf(Error)
+    expect(result?.left?.message).toBe('Unauthorized')
   })
 })

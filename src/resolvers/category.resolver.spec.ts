@@ -1,59 +1,23 @@
 import { faker } from '@faker-js/faker'
 import { describe, expect, it, vi } from 'vitest'
-import type {
-  CreateCategoryInput,
-  UpdateCategoryInput,
-} from '@/dtos/input/category.input'
-import type { GraphQLContext } from '@/graphql/context'
+import { createMockContext } from '@/test/utils'
+import {
+  globalMockCategoryService,
+  globalMockUserService,
+} from '@/test/utils/index'
+import { makeRight } from '@/utils/either'
 import { CategoryResolver } from './category.resolver'
 
-type createSetup = {
-  input: CreateCategoryInput
-  context: GraphQLContext
-}
+describe('CategoryResolver.createCategory', () => {
+  it('should delegate creation to CategoryService', async () => {
+    const context = createMockContext()
 
-type getSetup = {
-  input: { currentUserId: string }
-  context: GraphQLContext
-}
-
-type updateSetup = {
-  input: UpdateCategoryInput
-  context: GraphQLContext
-}
-
-type deleteSetup = {
-  input: { id: string }
-  context: GraphQLContext
-}
-
-function makeResolverSetup(
-  method: 'create' | 'update' | 'delete' | 'get',
-  overrides?: Partial<createSetup | updateSetup | deleteSetup | getSetup>
-): createSetup | updateSetup | deleteSetup | getSetup {
-  const data = {
-    input: {
+    const input = {
       title: faker.lorem.words(1),
       description: faker.lorem.sentence(),
       icon: faker.word.noun(),
       color: faker.color.human(),
-      ...overrides?.input,
-    },
-    context: {
-      currentUserId: faker.string.uuid(),
-      ...overrides?.context,
-    } as GraphQLContext,
-  }
-  if (method === 'update') {
-    Object.assign(data.input, { id: faker.string.uuid() })
-    return data
-  }
-  return data
-}
-
-describe('CategoryResolver.createCategory', () => {
-  it('should delegate creation to CategoryService', async () => {
-    const { input, context } = makeResolverSetup('create') as createSetup
+    }
 
     const createCategory = vi.fn().mockResolvedValue({
       id: 'category-id',
@@ -63,15 +27,15 @@ describe('CategoryResolver.createCategory', () => {
       updatedAt: new Date(),
     })
 
-    const resolver = new CategoryResolver({
-      categoryService: {
-        createCategory,
-        getCategories: vi.fn(),
-        getCategoriesSummary: vi.fn(),
-        updateCategory: vi.fn(),
-        deleteCategory: vi.fn(),
-      },
-    })
+    const mockCategoryService = {
+      ...globalMockCategoryService,
+      createCategory,
+    }
+
+    const resolver = new CategoryResolver(
+      mockCategoryService,
+      globalMockUserService
+    )
 
     const result = await resolver.createCategory(input, context)
 
@@ -87,12 +51,19 @@ describe('CategoryResolver.createCategory', () => {
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new CategoryResolver()
-    const { input, context } = makeResolverSetup('create', {
-      context: {
-        currentUserId: undefined,
-      } as GraphQLContext,
-    }) as createSetup
+    const resolver = new CategoryResolver(
+      globalMockCategoryService,
+      globalMockUserService
+    )
+
+    const input = {
+      title: faker.lorem.words(1),
+      description: faker.lorem.sentence(),
+      icon: faker.word.noun(),
+      color: faker.color.human(),
+    }
+
+    const context = createMockContext({ currentUserId: undefined })
 
     await expect(resolver.createCategory(input, context)).rejects.toThrow(
       'Unauthorized'
@@ -102,11 +73,9 @@ describe('CategoryResolver.createCategory', () => {
 
 describe('CategoryResolver.getCategories', () => {
   it('should delegate fetching to CategoryService', async () => {
-    const context = {
-      currentUserId: faker.string.uuid(),
-    } as GraphQLContext
+    const context = createMockContext()
 
-    const categorys = [
+    const categories = [
       {
         id: faker.string.uuid(),
         title: faker.lorem.words(1),
@@ -119,39 +88,45 @@ describe('CategoryResolver.getCategories', () => {
       },
     ]
 
-    const getCategories = vi.fn().mockResolvedValue(categorys)
+    const getCategories = vi.fn().mockResolvedValue(categories)
+    const mockCategoryService = {
+      ...globalMockCategoryService,
+      getCategories,
+    }
 
-    const resolver = new CategoryResolver({
-      categoryService: {
-        createCategory: vi.fn(),
-        getCategories,
-        getCategoriesSummary: vi.fn(),
-        updateCategory: vi.fn(),
-        deleteCategory: vi.fn(),
-      },
-    })
+    const resolver = new CategoryResolver(
+      mockCategoryService,
+      globalMockUserService
+    )
 
-    const result = await resolver.getCategories(context)
+    const result = await resolver.categories(context)
 
     expect(getCategories).toHaveBeenCalledWith(context.currentUserId)
-    expect(result).toEqual(categorys)
+    expect(result).toEqual(categories)
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new CategoryResolver()
-    const context = {
-      currentUserId: undefined,
-    } as GraphQLContext
-
-    await expect(resolver.getCategories(context)).rejects.toThrow(
-      'Unauthorized'
+    const resolver = new CategoryResolver(
+      globalMockCategoryService,
+      globalMockUserService
     )
+    const context = createMockContext({ currentUserId: undefined })
+
+    await expect(resolver.categories(context)).rejects.toThrow('Unauthorized')
   })
 })
 
 describe('CategoryResolver.updateCategory', () => {
   it('should delegate update to CategoryService', async () => {
-    const { input, context } = makeResolverSetup('update') as updateSetup
+    const context = createMockContext()
+    const input = {
+      id: faker.string.uuid(),
+      title: faker.lorem.words(1),
+      description: faker.lorem.sentence(),
+      icon: faker.word.noun(),
+      color: faker.color.human(),
+      userId: context.currentUserId,
+    }
 
     const updateCategory = vi.fn().mockResolvedValue({
       ...input,
@@ -160,15 +135,14 @@ describe('CategoryResolver.updateCategory', () => {
       updatedAt: new Date(),
     })
 
-    const resolver = new CategoryResolver({
-      categoryService: {
-        createCategory: vi.fn(),
-        getCategories: vi.fn(),
-        getCategoriesSummary: vi.fn(),
-        updateCategory,
-        deleteCategory: vi.fn(),
-      },
-    })
+    const mockCategoryService = {
+      ...globalMockCategoryService,
+      updateCategory,
+    }
+    const resolver = new CategoryResolver(
+      mockCategoryService,
+      globalMockUserService
+    )
 
     const result = await resolver.updateCategory(input, context)
 
@@ -184,12 +158,14 @@ describe('CategoryResolver.updateCategory', () => {
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new CategoryResolver()
-    const { input, context } = makeResolverSetup('update', {
-      context: {
-        currentUserId: undefined,
-      } as GraphQLContext,
-    }) as updateSetup
+    const resolver = new CategoryResolver(
+      globalMockCategoryService,
+      globalMockUserService
+    )
+    const input = {
+      id: faker.string.uuid(),
+    }
+    const context = createMockContext({ currentUserId: undefined })
 
     await expect(resolver.updateCategory(input, context)).rejects.toThrow(
       'Unauthorized'
@@ -199,20 +175,21 @@ describe('CategoryResolver.updateCategory', () => {
 
 describe('CategoryResolver.deleteCategory', () => {
   it('should delegate deletion to CategoryService', async () => {
-    const { input, context } = makeResolverSetup('update') as deleteSetup
+    const input = {
+      id: faker.string.uuid(),
+    }
+    const context = createMockContext()
 
-    const deleteCategory = vi.fn().mockResolvedValue(true)
+    const deleteCategory = vi.fn().mockResolvedValue(makeRight(true))
+    const mockCategoryService = {
+      ...globalMockCategoryService,
+      deleteCategory,
+    }
 
-    const resolver = new CategoryResolver({
-      categoryService: {
-        createCategory: vi.fn(),
-        getCategories: vi.fn(),
-        getCategoriesSummary: vi.fn(),
-        updateCategory: vi.fn(),
-        deleteCategory,
-      },
-    })
-
+    const resolver = new CategoryResolver(
+      mockCategoryService,
+      globalMockUserService
+    )
     const result = await resolver.deleteCategory(input.id, context)
 
     expect(deleteCategory).toHaveBeenCalledWith(input.id, context.currentUserId)
@@ -220,46 +197,13 @@ describe('CategoryResolver.deleteCategory', () => {
   })
 
   it('should throw Unauthorized when context has no userId', async () => {
-    const resolver = new CategoryResolver()
-    const { input, context } = makeResolverSetup('update', {
-      context: {
-        currentUserId: undefined,
-      } as GraphQLContext,
-    }) as deleteSetup
-
-    await expect(resolver.deleteCategory(input.id, context)).rejects.toThrow(
-      'Unauthorized'
+    const resolver = new CategoryResolver(
+      globalMockCategoryService,
+      globalMockUserService
     )
-  })
-})
-
-describe('CategoryResolver.user', () => {
-  it('should resolve user from UserService', async () => {
-    const userId = faker.string.uuid()
-    const getUserById = vi.fn().mockResolvedValue({
-      id: userId,
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-    })
-
-    const resolver = new CategoryResolver({
-      userService: {
-        getUserById,
-      },
-      categoryService: {
-        createCategory: vi.fn(),
-        getCategories: vi.fn(),
-        getCategoriesSummary: vi.fn(),
-        updateCategory: vi.fn(),
-        deleteCategory: vi.fn(),
-      },
-    })
-
-    const result = await resolver.user({ userId } as never)
-
-    expect(getUserById).toHaveBeenCalledWith(userId)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe(userId)
+    const context = createMockContext({ currentUserId: undefined })
+    await expect(
+      resolver.deleteCategory(faker.string.uuid(), context)
+    ).rejects.toThrow('Unauthorized')
   })
 })

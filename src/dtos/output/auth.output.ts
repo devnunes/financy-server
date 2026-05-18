@@ -1,20 +1,15 @@
-import { Field, ObjectType } from 'type-graphql'
-import { UserModel } from '../../models/user.model'
+import { Field, ID, ObjectType } from 'type-graphql'
+
+export type AuthOutputWithoutPassword = Omit<AuthOutput, 'password'>
 
 @ObjectType()
-export class SignUpOutput {
-  @Field(() => String)
-  token!: string
+export class AuthOutput {
+  @Field(() => ID)
+  id!: string
 
   @Field(() => String)
-  refreshToken!: string
+  name!: string
 
-  @Field(() => UserModel)
-  user!: UserModel
-}
-
-@ObjectType()
-export class SignInOutput {
-  @Field(() => UserModel)
-  user!: UserModel
+  @Field(() => String)
+  email!: string
 }

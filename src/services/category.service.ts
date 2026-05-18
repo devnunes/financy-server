@@ -5,6 +5,7 @@ import type {
 import type { CategoryModel } from '@/models/category.model'
 import type { CategoriesSummaryModel } from '@/models/category-summary.model'
 import { prismaClient } from '@/prisma/prisma'
+import { type Either, makeLeft, makeRight } from '@/utils/either'
 
 export class CategoryService {
   async createCategory(
@@ -36,7 +37,7 @@ export class CategoryService {
     }))
   }
 
-  async getCategoryById(id: string): Promise<CategoryModel | null> {
+  async getCategory(id: string): Promise<CategoryModel | null> {
     return await prismaClient.category.findUnique({
       where: { id },
     })
@@ -59,19 +60,22 @@ export class CategoryService {
     })
   }
 
-  async deleteCategory(id: string, userId: string): Promise<boolean> {
+  async deleteCategory(
+    id: string,
+    userId: string
+  ): Promise<Either<Error, boolean>> {
     const category = await prismaClient.category.findUnique({
       where: { id },
     })
 
-    if (!category) throw new Error('Category not found')
-    if (category.userId !== userId) throw new Error('Unauthorized')
+    if (!category) return makeLeft(new Error('Category not found'))
+    if (category.userId !== userId) return makeLeft(new Error('Unauthorized'))
 
     await prismaClient.category.delete({
       where: { id },
     })
 
-    return true
+    return makeRight(true)
   }
 
   async categoryBelongsToUser(

@@ -1,38 +1,13 @@
-import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
 import { AuthService } from '@/services/auth.service'
 import { createUserFactory } from '@/test/factories/user.factory'
 import { isLeft, isRight, unwrapEither } from '@/utils/either'
 
 describe('AuthService.signUp', () => {
-  it('creates a new user and returns signed tokens', async () => {
-    const service = new AuthService()
-    const password = 'sign-up-password'
-    const user = {
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password,
-    }
-    const result = await service.signUp(user)
-
-    expect(isRight(result)).toBe(true)
-    expect(result.right).toEqual(
-      expect.objectContaining({
-        token: expect.any(String),
-        refreshToken: expect.any(String),
-        user: expect.objectContaining({
-          id: expect.any(String),
-          name: user.name,
-          email: user.email,
-        }),
-      })
-    )
-  })
-
   it('throws when user already exists', async () => {
     const service = new AuthService()
     const existingUser = await createUserFactory()
-    const result = await service.signUp({
+    const result = await service.getValidUser({
       name: existingUser.name,
       email: existingUser.email,
       password: 'any-password',
@@ -50,28 +25,24 @@ describe('AuthService.signIn', () => {
       password,
     })
 
-    const result = await service.validateUser({
+    const result = await service.getValidUser({
       email: user.email,
       password,
     })
 
     expect(isRight(result)).toBe(true)
-    if (!isRight(result)) throw result.left
 
-    expect(result.right).toEqual(
-      expect.objectContaining({
-        user: expect.objectContaining({
-          id: expect.any(String),
-          email: user.email,
-        }),
-      })
-    )
+    const authOutput = result.right
+    expect(authOutput).toHaveProperty('id')
+    expect(authOutput).toHaveProperty('email')
+    expect(authOutput?.name).toBe(user.name)
+    expect(authOutput?.email).toBe(user.email)
   })
 
   it('throws when credentials are invalid', async () => {
     const service = new AuthService()
     const user = await createUserFactory()
-    const result = await service.validateUser({
+    const result = await service.getValidUser({
       email: user.email,
       password: 'wrong-password',
     })
@@ -81,7 +52,7 @@ describe('AuthService.signIn', () => {
 
   it('throws when user does not exist', async () => {
     const service = new AuthService()
-    const result = await service.validateUser({
+    const result = await service.getValidUser({
       email: `not-found-${Date.now()}@mail.com`,
       password: 'any-password',
     })

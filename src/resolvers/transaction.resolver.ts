@@ -22,47 +22,46 @@ import { UserModel } from '@/models/user.model'
 import { CategoryService } from '@/services/category.service'
 import { TransactionService } from '@/services/transaction.service'
 import { UserService } from '@/services/user.service'
-
-type TransactionResolverDeps = {
-  transactionService?: Pick<
-    TransactionService,
-    | 'createTransaction'
-    | 'getTransactions'
-    | 'getOneTransaction'
-    | 'getTransactionSummary'
-    | 'updateTransaction'
-    | 'deleteTransaction'
-  >
-  userService?: Pick<UserService, 'getUserById'>
-  categoryService?: Pick<
-    CategoryService,
-    'getCategoryById' | 'categoryBelongsToUser'
-  >
-}
+import { isLeft } from '@/utils/either'
 
 @Resolver(() => TransactionModel)
 @UseMiddleware(authMiddleware)
 export class TransactionResolver {
-  private transactionService: Pick<
-    TransactionService,
-    | 'createTransaction'
-    | 'getTransactions'
-    | 'getOneTransaction'
-    | 'getTransactionSummary'
-    | 'updateTransaction'
-    | 'deleteTransaction'
-  >
-  private userService: Pick<UserService, 'getUserById'>
-  private categoryService: Pick<
-    CategoryService,
-    'getCategoryById' | 'categoryBelongsToUser'
-  >
+  constructor(
+    private readonly transactionService: TransactionService = new TransactionService(),
+    private readonly userService: UserService = new UserService(),
+    private readonly categoryService: CategoryService = new CategoryService()
+  ) {}
 
-  constructor(deps?: TransactionResolverDeps) {
-    this.transactionService =
-      deps?.transactionService ?? new TransactionService()
-    this.userService = deps?.userService ?? new UserService()
-    this.categoryService = deps?.categoryService ?? new CategoryService()
+  @Query(() => [TransactionModel])
+  async transactions(
+    @Ctx() context: GraphQLContext
+  ): Promise<TransactionModel[]> {
+    if (!context.currentUserId) throw new Error('Unauthorized')
+
+    return this.transactionService.getTransactions(context.currentUserId)
+  }
+
+  @Query(() => TransactionModel)
+  async transaction(
+    @Arg('data', () => GetOneTransactionInput) data: GetOneTransactionInput,
+    @Ctx() context: GraphQLContext
+  ): Promise<TransactionModel> {
+    if (!context.currentUserId) throw new Error('Unauthorized')
+
+    return this.transactionService.getOneTransaction(
+      data.id,
+      context.currentUserId
+    )
+  }
+
+  @Query(() => TransactionSummaryModel)
+  async transactionSummary(
+    @Ctx() context: GraphQLContext
+  ): Promise<TransactionSummaryModel> {
+    if (!context.currentUserId) throw new Error('Unauthorized')
+
+    return this.transactionService.getTransactionSummary(context.currentUserId)
   }
 
   @Mutation(() => TransactionModel)
@@ -82,37 +81,6 @@ export class TransactionResolver {
       data,
       context.currentUserId
     )
-  }
-
-  @Query(() => [TransactionModel])
-  async getTransactions(
-    @Ctx() context: GraphQLContext
-  ): Promise<TransactionModel[]> {
-    if (!context.currentUserId) throw new Error('Unauthorized')
-
-    return this.transactionService.getTransactions(context.currentUserId)
-  }
-
-  @Query(() => TransactionModel)
-  async getOneTransaction(
-    @Arg('data', () => GetOneTransactionInput) data: GetOneTransactionInput,
-    @Ctx() context: GraphQLContext
-  ): Promise<TransactionModel> {
-    if (!context.currentUserId) throw new Error('Unauthorized')
-
-    return this.transactionService.getOneTransaction(
-      data.id,
-      context.currentUserId
-    )
-  }
-
-  @Query(() => TransactionSummaryModel)
-  async getTransactionSummary(
-    @Ctx() context: GraphQLContext
-  ): Promise<TransactionSummaryModel> {
-    if (!context.currentUserId) throw new Error('Unauthorized')
-
-    return this.transactionService.getTransactionSummary(context.currentUserId)
   }
 
   @Mutation(() => TransactionModel)
@@ -149,13 +117,16 @@ export class TransactionResolver {
 
   @FieldResolver(() => UserModel, { nullable: true })
   async user(@Root() transaction: TransactionModel): Promise<UserModel | null> {
-    return this.userService.getUserById(transaction.userId)
+    const user = await this.userService.getUser({ id: transaction.userId })
+    if (isLeft(user)) throw user.left
+
+    return user.right
   }
 
   @FieldResolver(() => CategoryModel, { nullable: true })
   async category(
     @Root() transaction: TransactionModel
   ): Promise<CategoryModel | null> {
-    return this.categoryService.getCategoryById(transaction.categoryId)
+    return this.categoryService.getCategory(transaction.categoryId)
   }
 }

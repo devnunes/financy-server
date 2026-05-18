@@ -1,37 +1,81 @@
-import type { CreateUserInput, UpdateUserInput } from '@/dtos/input/user.input'
+import z from 'zod/v4'
+import type {
+  CreateUserInput,
+  GetUserInput,
+  UpdateUserInput,
+} from '@/dtos/input/user.input'
+import type { UserModel } from '@/models/user.model'
 import { prismaClient } from '@/prisma/prisma'
+import { type Either, makeLeft, makeRight } from '@/utils/either'
 import { hashPassword } from '@/utils/hash'
 
+const userSchema = z.object({
+  name: z.string().min(1),
+  email: z.email(),
+  password: z
+    .string()
+    .min(6)
+    .transform(async password => await hashPassword(password)),
+})
 export class UserService {
-  async createUser(data: CreateUserInput) {
-    return prismaClient.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        password: await hashPassword(data.password),
-      },
+  async createUser(data: CreateUserInput): Promise<UserModel> {
+    const validData = await userSchema
+      .parseAsync(data)
+      .catch(err => {
+        if (err instanceof z.ZodError) {
+          throw new Error(
+            `Validation error: ${err.issues.map(e => e.message).join(', ')}`
+          )
+        }
+      })
+      .then(validData => validData)
+
+    if (!validData) throw new Error('Invalid input')
+
+    const userCreated = await prismaClient.user.create({
+      data: validData,
     })
+    return userCreated
   }
 
-  async getUserById(id: string) {
-    const user = await prismaClient.user.findUnique({
-      where: {
-        id,
-      },
-    })
-    if (!user) throw new Error('User not found')
-    return user
+  async getUser({
+    id,
+    email,
+  }: GetUserInput): Promise<Either<Error, UserModel>> {
+    if (id) {
+      const user = await prismaClient.user.findUnique({
+        where: {
+          id,
+        },
+      })
+      if (!user) return makeLeft(new Error('User not found'))
+      return makeRight(user)
+    }
+
+    if (email) {
+      const user = await prismaClient.user.findUnique({
+        where: {
+          email,
+        },
+      })
+      if (!user) return makeLeft(new Error('User not found'))
+      return makeRight(user)
+    }
+    return makeLeft(new Error('Invalid input'))
   }
 
-  async updateUser(data: UpdateUserInput, userId: string) {
-    if (!userId) throw new Error('Unauthorized')
-    if (data.id !== userId) throw new Error('Unauthorized')
+  async updateUser(
+    data: UpdateUserInput,
+    userId: string
+  ): Promise<Either<Error, boolean>> {
+    if (!userId) return makeLeft(new Error('Unauthorized'))
+    if (data.id !== userId) return makeLeft(new Error('Unauthorized'))
     const user = await prismaClient.user.findUnique({
       where: {
         id: userId,
       },
     })
-    if (!user) throw new Error('User not found')
+    if (!user) return makeLeft(new Error('User not found'))
 
     const password = data.password
       ? await hashPassword(data.password)
@@ -48,6 +92,45 @@ export class UserService {
       },
     })
 
-    return true
+    return makeRight(true)
+  }
+
+  async monthIncome(userId: string): Promise<Either<Error, number>> {
+    if (!userId) return makeLeft(new Error('Unauthorized'))
+    const user = await prismaClient.user.findUnique({
+      where: {
+        id: userId,
+      },
+    })
+    if (!user) return makeLeft(new Error('User not found'))
+
+    const income = await prismaClient.transaction.aggregate({
+      where: { userId, type: 'income' },
+      _sum: { amount: true },
+    })
+
+    const incomeValue = income._sum.amount ?? 0
+    const formattedIncome = Number((incomeValue / 100).toFixed(2))
+    return makeRight(formattedIncome)
+  }
+
+  async monthExpense(userId: string): Promise<Either<Error, number>> {
+    if (!userId) return makeLeft(new Error('Unauthorized'))
+    const user = await prismaClient.user.findUnique({
+      where: {
+        id: userId,
+      },
+    })
+    if (!user) return makeLeft(new Error('User not found'))
+
+    const expenses = await prismaClient.transaction.aggregate({
+      where: { userId, type: 'expense' },
+      _sum: { amount: true },
+    })
+
+    const expensesValue = expenses._sum.amount ?? 0
+    const formattedExpenses = Number((expensesValue / 100).toFixed(2))
+
+    return makeRight(formattedExpenses)
   }
 }
