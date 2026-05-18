@@ -1,4 +1,4 @@
-import { Field, GraphQLISODateTime, ID, InputType } from 'type-graphql'
+import { Field, GraphQLISODateTime, ID, InputType, Int } from 'type-graphql'
 
 @InputType()
 export class CreateTransactionInput {
@@ -43,4 +43,10 @@ export class UpdateTransactionInput {
 
   @Field(() => GraphQLISODateTime, { nullable: true })
   date?: Date
+}
+
+@InputType()
+export class TransactionsFilterInput {
+  @Field(() => Int, { nullable: true })
+  max?: number
 }

@@ -20,10 +20,11 @@ export class CategoryService {
     })
   }
 
-  async getCategories(userId: string): Promise<CategoryModel[]> {
+  async getCategories(userId: string, max?: number): Promise<CategoryModel[]> {
     const categories = await prismaClient.category.findMany({
       where: { userId },
       orderBy: { id: 'desc' },
+      take: max,
       include: {
         _count: {
           select: { transactions: true },
@@ -90,9 +91,13 @@ export class CategoryService {
     return category.userId === userId
   }
 
-  async getCategoriesSummary(userId: string): Promise<CategoriesSummaryModel> {
+  async getCategoriesSummary(
+    userId: string,
+    max?: number
+  ): Promise<CategoriesSummaryModel> {
     const categories = await prismaClient.category.findMany({
       where: { userId },
+      take: max,
       select: {
         id: true,
         title: true,
@@ -111,6 +116,7 @@ export class CategoryService {
           where: { categoryId: category.id },
           _sum: { amount: true },
           _count: { id: true },
+          orderBy: { date: 'desc' },
         })
 
         return {
@@ -119,6 +125,9 @@ export class CategoryService {
           totalAmount: result._sum.amount || 0,
         }
       })
+    )
+    const sortedCategoriesAggregated = categoriesAggregated.sort(
+      (a, b) => b.totalAmount - a.totalAmount
     )
 
     return {
@@ -129,7 +138,7 @@ export class CategoryService {
           ? prev
           : current
       ),
-      categories: categoriesAggregated,
+      categories: sortedCategoriesAggregated,
     }
   }
 }

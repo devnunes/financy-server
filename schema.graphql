@@ -24,6 +24,10 @@ type CategoriesAggregatedModel {
   transactionCountByCategory: Int!
 }
 
+input CategoriesFilterInput {
+  max: Int
+}
+
 type CategoriesSummaryModel {
   categories: [CategoriesAggregatedModel!]!
   categoryCount: Float!
@@ -84,12 +88,12 @@ type Mutation {
 }
 
 type Query {
-  categories: [CategoryModel!]!
-  categoriesSummary: CategoriesSummaryModel!
+  categories(data: CategoriesFilterInput!): [CategoryModel!]!
+  categoriesSummary(data: CategoriesFilterInput!): CategoriesSummaryModel!
   me: UserModel!
   transaction(data: GetOneTransactionInput!): TransactionModel!
   transactionSummary: TransactionSummaryModel!
-  transactions: [TransactionModel!]!
+  transactions(data: TransactionsFilterInput!): [TransactionModel!]!
   user(id: String!): UserModel!
   userBalance: UserBalanceModel!
 }
@@ -112,6 +116,10 @@ type TransactionSummaryModel {
   balance: Float!
   expense: Float!
   income: Float!
+}
+
+input TransactionsFilterInput {
+  max: Int
 }
 
 input UpdateCategoryInput {

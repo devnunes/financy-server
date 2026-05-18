@@ -24,10 +24,11 @@ export class TransactionService {
     return transaction
   }
 
-  async getTransactions(userId: string) {
+  async getTransactions(userId: string, max?: number) {
     const transactions = await prismaClient.transaction.findMany({
       where: { userId },
       orderBy: { date: 'desc' },
+      take: max,
     })
     const parsedTransactions = transactions.map(transaction => ({
       ...transaction,

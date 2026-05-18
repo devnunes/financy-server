@@ -99,9 +99,8 @@ describe('CategoryResolver.getCategories', () => {
       globalMockUserService
     )
 
-    const result = await resolver.categories(context)
-
-    expect(getCategories).toHaveBeenCalledWith(context.currentUserId)
+    const result = await resolver.categories({}, context)
+  expect(getCategories).toHaveBeenCalledWith(context.currentUserId, undefined)
     expect(result).toEqual(categories)
   })
 
@@ -112,7 +111,7 @@ describe('CategoryResolver.getCategories', () => {
     )
     const context = createMockContext({ currentUserId: undefined })
 
-    await expect(resolver.categories(context)).rejects.toThrow('Unauthorized')
+    await expect(resolver.categories({}, context)).rejects.toThrow('Unauthorized')
   })
 })
 

@@ -1,4 +1,4 @@
-import { Field, ID, InputType } from 'type-graphql'
+import { Field, ID, InputType, Int } from 'type-graphql'
 
 @InputType()
 export class CreateCategoryInput {
@@ -34,4 +34,10 @@ export class UpdateCategoryInput {
 
   @Field(() => String, { nullable: true })
   userId?: string
+}
+
+@InputType()
+export class CategoriesFilterInput {
+  @Field(() => Int, { nullable: true })
+  max?: number
 }

@@ -12,28 +12,26 @@ import { hashPassword } from '@/utils/hash'
 const userSchema = z.object({
   name: z.string().min(1),
   email: z.email(),
-  password: z
-    .string()
-    .min(6)
-    .transform(async password => await hashPassword(password)),
+  password: z.string().min(6),
 })
 export class UserService {
   async createUser(data: CreateUserInput): Promise<UserModel> {
-    const validData = await userSchema
-      .parseAsync(data)
-      .catch(err => {
-        if (err instanceof z.ZodError) {
-          throw new Error(
-            `Validation error: ${err.issues.map(e => e.message).join(', ')}`
-          )
-        }
-      })
-      .then(validData => validData)
-
+    const validData = await userSchema.parseAsync(data).catch(err => {
+      if (err instanceof z.ZodError) {
+        throw new Error(
+          `Validation error: ${err.issues.map(e => e.message).join(', ')}`
+        )
+      }
+    })
     if (!validData) throw new Error('Invalid input')
 
+    // Hash the password before saving
+    const hashedPassword = await hashPassword(validData.password)
     const userCreated = await prismaClient.user.create({
-      data: validData,
+      data: {
+        ...validData,
+        password: hashedPassword,
+      },
     })
     return userCreated
   }

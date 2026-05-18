@@ -127,9 +127,8 @@ describe('TransactionResolver.getTransactions', () => {
       categoryService
     )
 
-    const result = await resolver.transactions(context)
-
-    expect(getTransactions).toHaveBeenCalledWith(context.currentUserId)
+    const result = await resolver.transactions({}, context)
+  expect(getTransactions).toHaveBeenCalledWith(context.currentUserId, undefined)
     expect(result).toEqual(transactions)
   })
 
@@ -152,7 +151,9 @@ describe('TransactionResolver.getTransactions', () => {
       currentUserId: undefined,
     } as GraphQLContext
 
-    await expect(resolver.transactions(context)).rejects.toThrow('Unauthorized')
+    await expect(resolver.transactions({}, context)).rejects.toThrow(
+      'Unauthorized'
+    )
   })
 })
 

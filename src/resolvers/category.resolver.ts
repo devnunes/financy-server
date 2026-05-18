@@ -10,6 +10,7 @@ import {
 } from 'type-graphql'
 import { ZodError } from 'zod'
 import {
+  CategoriesFilterInput,
   CreateCategoryInput,
   UpdateCategoryInput,
 } from '@/dtos/input/category.input'
@@ -36,22 +37,28 @@ export class CategoryResolver {
 
   @Query(() => CategoriesSummaryModel)
   async categoriesSummary(
+    @Arg('data', () => CategoriesFilterInput) data: CategoriesFilterInput,
     @Ctx() context: GraphQLContext
   ): Promise<CategoriesSummaryModel> {
     if (!context.currentUserId) throw new Error('Unauthorized')
 
     const summary = await this.categoryService.getCategoriesSummary(
-      context.currentUserId
+      context.currentUserId,
+      data.max
     )
     return summary
   }
 
   @Query(() => [CategoryModel])
-  async categories(@Ctx() context: GraphQLContext): Promise<CategoryModel[]> {
+  async categories(
+    @Arg('data', () => CategoriesFilterInput) data: CategoriesFilterInput,
+    @Ctx() context: GraphQLContext
+  ): Promise<CategoryModel[]> {
     if (!context.currentUserId) throw new Error('Unauthorized')
 
     const categories = await this.categoryService.getCategories(
-      context.currentUserId
+      context.currentUserId,
+      data.max
     )
     return categories
   }

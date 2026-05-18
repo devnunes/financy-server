@@ -11,6 +11,7 @@ import {
 import {
   CreateTransactionInput,
   GetOneTransactionInput,
+  TransactionsFilterInput,
   UpdateTransactionInput,
 } from '@/dtos/input/transaction.input'
 import type { GraphQLContext } from '@/graphql/context'
@@ -35,11 +36,15 @@ export class TransactionResolver {
 
   @Query(() => [TransactionModel])
   async transactions(
+    @Arg('data', () => TransactionsFilterInput) data: TransactionsFilterInput,
     @Ctx() context: GraphQLContext
   ): Promise<TransactionModel[]> {
     if (!context.currentUserId) throw new Error('Unauthorized')
 
-    return this.transactionService.getTransactions(context.currentUserId)
+    return this.transactionService.getTransactions(
+      context.currentUserId,
+      data.max
+    )
   }
 
   @Query(() => TransactionModel)
