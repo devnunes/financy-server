@@ -12,9 +12,12 @@ export class CategoryService {
     data: CreateCategoryInput,
     userId: string
   ): Promise<CategoryModel> {
+    const normalizedDescription = data.description?.trim() ?? ''
+
     return prismaClient.category.create({
       data: {
         ...data,
+        description: normalizedDescription,
         userId,
       },
     })
@@ -55,9 +58,15 @@ export class CategoryService {
     if (!category) throw new Error('Category not found')
     if (category.userId !== userId) throw new Error('Unauthorized')
 
+    const normalizedDescription =
+      data.description === undefined ? undefined : (data.description?.trim() ?? '')
+
     return prismaClient.category.update({
       where: { id: data.id },
-      data,
+      data: {
+        ...data,
+        description: normalizedDescription,
+      },
     })
   }
 
