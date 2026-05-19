@@ -16,6 +16,8 @@ Provide authentication and per-user financial data management with strict data i
 - Vitest
 - Biome
 
+
+> **Todas as operações de autenticação, transações e categorias exigidas pelo desafio estão implementadas e disponíveis na API.**
 ## Current GraphQL Surface
 
 ### Authentication
