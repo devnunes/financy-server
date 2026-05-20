@@ -62,14 +62,20 @@ Environment variables validated in `src/env.ts`:
 - `COOKIE_SECRET` (required)
 - `WEB_URL` (required for explicit credentialed CORS origin; e.g. `http://localhost:5173`)
 
+Recommended SQLite files by environment:
+
+- Development: `file:./prisma/dev.db`
+- Test: `file:./prisma/test.db`
+- Production: `file:./prisma/prod.db`
+
 ## Local Development Setup
 
 ```bash
 pnpm install
 cp .env.example .env.dev
 # Ensure .env.dev contains DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET, COOKIE_SECRET, and WEB_URL
-pnpm dev:generate
-pnpm dev:migrate
+pnpm dev:db:build
+pnpm dev:db:seed
 pnpm dev
 ```
 
@@ -79,10 +85,10 @@ API endpoint: `http://localhost:3333/graphql`
 
 ```bash
 pnpm dev            # start server in development mode (.env.dev)
-pnpm dev:migrate    # create/apply Prisma migrations in development
-pnpm dev:generate   # generate Prisma client in development
-pnpm dev:studio     # open Prisma Studio in development
-pnpm seed           # run seed script in development
+pnpm dev:db:build   # generate Prisma client + create/apply migrations in development
+pnpm dev:db:seed    # run seed via Prisma in development
+pnpm dev:db:studio  # open Prisma Studio in development
+pnpm prod:db:migrate # apply migrations in production (.env.prod)
 pnpm test           # run tests once (.env.test)
 pnpm test:watch     # run tests in watch mode (.env.test)
 pnpm test:coverage  # run tests with coverage (.env.test)
