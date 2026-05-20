@@ -106,6 +106,10 @@ export class CategoryService {
     userId: string,
     max?: number
   ): Promise<CategoriesSummaryModel> {
+    const categoryCountByUser = await prismaClient.category.count({
+      where: { userId },
+    })
+
     const categories = await prismaClient.category.findMany({
       where: { userId },
       take: max,
@@ -144,7 +148,7 @@ export class CategoryService {
 
     return {
       transactionCountByUser: transactionCountByUser._count.id,
-      categoryCount: categories.length,
+      categoryCount: categoryCountByUser,
       mostUsedCategory: categoriesAggregated.reduce((prev, current) =>
         prev.transactionCountByCategory > current.transactionCountByCategory
           ? prev
