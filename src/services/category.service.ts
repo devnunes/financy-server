@@ -59,7 +59,9 @@ export class CategoryService {
     if (category.userId !== userId) throw new Error('Unauthorized')
 
     const normalizedDescription =
-      data.description === undefined ? undefined : (data.description?.trim() ?? '')
+      data.description === undefined
+        ? undefined
+        : (data.description?.trim() ?? '')
 
     return prismaClient.category.update({
       where: { id: data.id },
