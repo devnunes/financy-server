@@ -7,7 +7,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1),
   JWT_REFRESH_SECRET: z.string().min(1),
   COOKIE_SECRET: z.string().min(1),
-  WEB_URL: z.url().optional(),
+  WEB_URL: z.url(),
 })
 
 export const env = envSchema.parse(process.env)

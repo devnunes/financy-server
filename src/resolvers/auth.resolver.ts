@@ -26,6 +26,10 @@ export class AuthResolver {
     const validUser = await this.authService.getValidUser(data)
     if (isRight(validUser)) throw new Error('User already exists')
 
+    if (!data.name?.trim()) {
+      throw new Error('Name is required')
+    }
+
     const createUserInput = {
       name: data.name,
       email: data.email,

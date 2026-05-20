@@ -44,7 +44,7 @@ const server = new ApolloServer<GraphQLContext>({
 })
 await server.start()
 
-const frontendOrigin = env.WEB_URL || 'http://localhost:5173'
+const frontendOrigin = env.WEB_URL
 
 app.register(fastifyCors, {
   origin: (origin, cb) => {

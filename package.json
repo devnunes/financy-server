@@ -10,7 +10,7 @@
     "format": "biome format --write .",
     "precommit": "pnpm lint && pnpm typecheck && pnpm test",
     "dev": "tsx watch --env-file .env.dev src/index.ts",
-    "dev:db:build": "pnpm dev:db:generate && pnpm dev:db:migrate",
+    "dev:build": "pnpm dev:db:generate && pnpm dev:db:migrate && tsx watch --env-file .env.dev src/index.ts",
     "dev:db:generate": "dotenv -e .env.dev -- prisma generate",
     "dev:db:migrate": "dotenv -e .env.dev -- prisma migrate dev",
     "dev:db:seed": "dotenv -e .env.dev -- prisma db seed",
@@ -20,7 +20,7 @@
     "test:coverage": "dotenv -e .env.test -- vitest run --coverage",
     "prod:db:generate": "dotenv -e .env.prod -- prisma generate",
     "prod:db:migrate": "dotenv -e .env.prod -- prisma migrate deploy",
-    "build": "pnpm prisma:generate && tsc -p tsconfig.json"
+    "build": "pnpm prod:db:generate && tsc -p tsconfig.json"
   },
   "keywords": [],
   "author": "",
