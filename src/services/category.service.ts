@@ -129,11 +129,12 @@ export class CategoryService {
           _count: { id: true },
           orderBy: { date: 'desc' },
         })
+        const amountSum = result._sum.amount || 0
 
         return {
           ...category,
           transactionCountByCategory: result._count.id,
-          totalAmount: result._sum.amount || 0,
+          totalAmount: Number((amountSum / 100).toFixed(2)),
         }
       })
     )
